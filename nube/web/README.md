@@ -19,6 +19,12 @@ el de la versión entregada y no se toca.
 - Si el `LIMIT` del modelo cortó una lista (10 o más filas), la página lo dice.
 - «Hablar» usa el dictado del navegador (Web Speech API) mientras no exista la
   voz propia (fase 4). Donde el navegador no lo tiene, el botón no aparece.
+- Mascotas, pedidas por David: con Anfibios, una rana de ojos rojos
+  (*Agalychnis callidryas*) en su nenúfar; con Aves, un tirano tropical
+  (*Tyrannus melancholicus*, el ave más avistada) en una rama. Flotan en el
+  Pacífico del mapa, parpadean y se mueven solas, y saltan con un clic. Son SVG
+  en `index.html`, animadas solo con transform y opacity, y se quedan quietas
+  con «reducir movimiento».
 - Sin dependencias ni paso de compilación: `index.html`, `estilos.css`, `app.js`.
 
 ## El mapa

@@ -128,3 +128,71 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
   .mapa-tarjeta { padding: 16px; border-radius: 20px; }
   .mapa text { font-size: 30px; stroke-width: 6px; }
 }
+
+/* ── Mascotas: rana de ojos rojos (anfibios) y tirano tropical (aves) ──
+   Flotan en el Pacífico del mapa. Solo se anima transform y opacity. */
+.mapa-envoltura { position: relative; }
+.mascota { position: absolute; left: 49%; bottom: -3%; width: 17%; min-width: 72px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; animation: entrar .7s cubic-bezier(.2, .9, .3, 1.3) both; }
+.mascota svg { width: 100%; height: auto; display: block; overflow: visible; }
+/* Solo las piezas animadas giran sobre su propia caja; las demás conservan
+   las rotaciones escritas en el SVG. */
+.rana .ondas ellipse, .rana .flota, .rana .garganta, .rana .parpado, .rana .cuerpo-rana,
+.ave .rama, .ave .cola, .ave .parpado-ave, .ave .cabeza-ave, .ave .pajaro { transform-box: fill-box; }
+[data-coleccion="anfibios"] .ave, [data-coleccion="aves"] .rana { display: none; }
+@keyframes entrar { from { opacity: 0; transform: translateY(18px) scale(.7); } to { opacity: 1; transform: none; } }
+
+/* Rana */
+.rana .ondas ellipse { fill: none; stroke: rgba(255, 255, 255, .9); stroke-width: 2; transform-origin: center; animation: onda 3.6s ease-out infinite; }
+.rana .ondas ellipse:nth-child(2) { animation-delay: 1.8s; }
+@keyframes onda { from { opacity: .8; transform: scale(.55); } to { opacity: 0; transform: scale(1.25); } }
+.rana .flota { transform-origin: center bottom; animation: flotar 4.6s ease-in-out infinite; }
+@keyframes flotar { 0%, 100% { transform: translateY(0) rotate(-1.2deg); } 50% { transform: translateY(-3px) rotate(1.2deg); } }
+.rana .nenufar { fill: #3c9a5f; }
+.rana .muesca { fill: var(--mar); }
+.rana .nervios { fill: none; stroke: #2d7a4a; stroke-width: 1.6; stroke-linecap: round; }
+.rana .flor { fill: #f39bc0; }
+.rana .tronco, .rana .cabeza, .rana .pata-tras, .rana .parpado { fill: #4fbf5e; }
+.rana .pata-tras { fill: #43a952; }
+.rana .costado { fill: #3b6fd6; }
+.rana .barriga { fill: #eef6c8; }
+.rana .dedos { fill: #ff8a1f; }
+.rana .garganta { fill: #f3f8d9; transform-origin: center top; animation: croar 2.8s ease-in-out infinite; }
+@keyframes croar { 0%, 60%, 100% { transform: scale(1); } 75% { transform: scale(1.18, 1.5); } }
+.rana .boca { fill: none; stroke: #23602f; stroke-width: 2; stroke-linecap: round; }
+.rana .ojo circle { fill: #e3262f; }
+.rana .pupila { fill: #111; }
+.rana .parpado { transform-origin: center top; transform: scaleY(0); animation: parpadeo 5.5s infinite; }
+.rana .cuerpo-rana { transform-origin: center bottom; }
+.rana.salta .cuerpo-rana { animation: salto-rana .75s cubic-bezier(.3, .7, .4, 1); }
+@keyframes salto-rana { 0% { transform: none; } 20% { transform: scale(1.08, .86); } 55% { transform: translateY(-34px) scale(.95, 1.08); } 85% { transform: translateY(0) scale(1.06, .92); } 100% { transform: none; } }
+@keyframes parpadeo { 0%, 93%, 100% { transform: scaleY(0); } 96% { transform: scaleY(1); } }
+
+/* Ave */
+.ave .rama { transform-origin: 0% 100%; animation: mecer 5.2s ease-in-out infinite; }
+@keyframes mecer { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-1.6deg); } }
+.ave .madera { fill: none; stroke: #7b5533; stroke-width: 7; stroke-linecap: round; }
+.ave .ramita { fill: none; stroke: #7b5533; stroke-width: 4; stroke-linecap: round; }
+.ave .hoja { fill: #5aa36a; }
+.ave .lomo { fill: #8a948f; }
+.ave .ala { fill: #5e6863; }
+.ave .pecho { fill: #f4cf35; }
+.ave .cola { fill: #4f5754; transform-origin: 85% 0%; animation: colear 3.4s ease-in-out infinite; }
+@keyframes colear { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(9deg); } 86% { transform: rotate(-3deg); } }
+.ave .patas { fill: none; stroke: #2b2e30; stroke-width: 2.4; stroke-linecap: round; }
+.ave .craneo, .ave .parpado-ave { fill: #a9b1b3; }
+.ave .garganta-ave { fill: #e7e9e3; }
+.ave .antifaz { fill: #4a4f52; }
+.ave .pico { fill: #2b2e30; }
+.ave .ojo-ave circle { fill: #111; }
+.ave .ojo-ave .brillo { fill: #fff; }
+.ave .parpado-ave { transform-origin: center top; transform: scaleY(0); animation: parpadeo 4.8s 1s infinite; }
+.ave .cabeza-ave { transform-origin: 30% 90%; animation: ladear 6s ease-in-out infinite; }
+@keyframes ladear { 0%, 35%, 100% { transform: rotate(0); } 45%, 58% { transform: rotate(-12deg); } 68%, 80% { transform: rotate(7deg); } }
+.ave .pajaro { transform-origin: center bottom; }
+.ave.salta .pajaro { animation: salto-ave .6s cubic-bezier(.3, .7, .4, 1); }
+@keyframes salto-ave { 0% { transform: none; } 25% { transform: scale(1.05, .9); } 55% { transform: translateY(-22px) rotate(-6deg); } 100% { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .mascota, .mascota * { animation: none !important; }
+  .rana .parpado, .ave .parpado-ave { transform: scaleY(0); }
+}

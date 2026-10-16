@@ -452,6 +452,19 @@ $("pregunta").addEventListener("keydown", (ev) => {
   }
 });
 
+// Mascotas: un clic y saltan.
+for (const id of ["rana", "ave"]) {
+  const m = $(id);
+  m.addEventListener("click", () => {
+    m.classList.remove("salta");
+    void m.offsetWidth; // reinicia la animación si ya estaba saltando
+    m.classList.add("salta");
+  });
+  m.addEventListener("animationend", (ev) => {
+    if (ev.animationName.startsWith("salto")) m.classList.remove("salta");
+  });
+}
+
 prepararDictado();
 await cargarMapa();
 await cambiarColeccion("anfibios");
