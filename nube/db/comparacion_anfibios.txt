@@ -1,0 +1,86 @@
+Comparación MySQL biodiversidad_panama contra Postgres (Neon) esquema anfibios
+
+== 1. consultas_referencia.sql ==
+[igual]   1. SIMPLE — ¿Cuántas especies hay registradas?: [(135,)]
+[igual]   2. SIMPLE — ¿Cuántos observadores hay?: [(2060,)]
+[igual]   3. FILTRO — ¿Qué especies se vieron en Bocas del Toro?: 38 filas
+[igual]   4. FILTRO — ¿Cuántos avistamientos hubo en 2025?: [(1925,)]
+[igual]   5. FILTRO — ¿Cuántos registros tienen foto disponible?: [(7776,)]
+[igual]   6. JOIN — ¿Cuál es la especie más avistada?: [('Rhinella horribilis', 1364)]
+[igual]   7. JOIN — ¿Qué familia tiene más especies?: [('Hylidae', 28)]
+[igual]   8. JOIN — ¿En qué provincias se ha visto Oophaga pumilio?: 7 filas
+[igual]   9. AGREGACIÓN — ¿Cuántos avistamientos hubo por año?: 7 filas
+[igual]   10. AGREGACIÓN — ¿Qué provincia tiene mayor diversidad de especies?: [('Panamá', 72)]
+
+== 2. Procedimientos ==
+[igual]   sp_total_especies(): [(135,)]
+[igual]   sp_total_observadores(): [(2060,)]
+[igual]   sp_especies_por_provincia('Bocas'): 38 filas
+[igual]   sp_especies_por_provincia('colon'): 61 filas
+[igual]   sp_especies_por_provincia('PANAMÁ OESTE'): 58 filas
+[igual]   sp_avistamientos_por_anio(2025): [(1925,)]
+[igual]   sp_avistamientos_por_anio(1999): [(0,)]
+[igual]   sp_registros_con_foto(): [(7776,)]
+[igual]   sp_especie_mas_avistada(): [('Rhinella horribilis', 1364)]
+[igual]   sp_familia_mas_especies(): [('Hylidae', 28)]
+[igual]   sp_provincias_por_especie('Oophaga pumilio'): 7 filas
+[igual]   sp_provincias_por_especie('rhinella'): 14 filas
+[igual]   sp_avistamientos_agrupados_por_anio(): 7 filas
+[igual]   sp_provincia_mayor_diversidad(): [('Panamá', 72)]
+
+== 3. Batería de comprobación ==
+[igual]   Orden con más avistamientos: [('Anura', 8355)]
+[igual]   Especie más avistada: [('Rhinella horribilis', 1364)]
+[igual]   Familia con más especies: [('Hylidae', 28)]
+[igual]   Avistamientos en 2025: [(1925,)]
+[igual]   Provincia de mayor diversidad: [('Panamá', 72)]
+[igual]   Ranking de órdenes: [('Anura', 8355), ('Caudata', 63), ('Gymnophiona', 12)]
+[igual]   Ranking de especies: 135 filas
+[igual]   Ranking de familias: 15 filas
+[igual]   Ranking de provincias: 15 filas
+
+== 4. Funciones ==
+[igual]   fn_temporada, meses 1 a 12 y NULL: 13 filas
+[igual]   fn_disponibilidad_multimedia, valores de prueba: 7 filas
+[igual]   fn_disponibilidad_multimedia sobre los datos: 4 filas
+[igual]   fn_temporada sobre los datos: [('Lluviosa', 4747), ('Seca', 3683)]
+[igual]   Resultado de función comparado sin mayúsculas: [(4747,)]
+
+== 5. Colación (mayúsculas y acentos) ==
+[igual]   LIKE sin acento ni mayúscula: [(1794,)]
+[igual]   = sin acento: [('Panamá',)]
+[igual]   = en mayúsculas con acento: [(1,)]
+[igual]   IN sin acentos: [('Chiriquí',), ('Coclé',), ('Darién',)]
+[igual]   Nombre común con LIKE: [('Oophaga pumilio', 'Rana Venenosa Roja y Azul')]
+[igual]   Orden alfabético de provincias: 15 filas
+[igual]   Orden alfabético de familias: 15 filas
+[igual]   Orden alfabético de especies: 135 filas
+[igual]   Valores con espacios al final (MySQL los ignora al comparar): [(0,)]
+
+== 6. Tablas y vista, fila por fila ==
+[igual]   conteo de orden: [(3,)]
+[igual]   contenido de orden: [(1, 'Anura'), (2, 'Caudata'), (3, 'Gymnophiona')]
+[igual]   conteo de familia: [(15,)]
+[igual]   contenido de familia: 15 filas
+[igual]   conteo de provincia: [(15,)]
+[igual]   contenido de provincia: 15 filas
+[igual]   conteo de fuente: [(3,)]
+[igual]   contenido de fuente: [(1, 'iNaturalist', 'https://www.inaturalist.org', 'CC_BY_NC_4_0', 'Red social de ciencia ciudadana para registro de biodiversidad'), (2, 'GBIF', 'https://www.gbif.org', 'CC_BY_4_0', 'Global Biodiversity Information Facility - agregador principal'), (3, 'eBird', 'https://ebird.org', 'CC_BY_NC_4_0', 'Plataforma de registro de aves de Cornell Lab')]
+[igual]   conteo de observador: [(2060,)]
+[igual]   contenido de observador: 2060 filas
+[igual]   conteo de especie: [(135,)]
+[igual]   contenido de especie: 135 filas
+[igual]   conteo de avistamiento: [(8430,)]
+[igual]   contenido de avistamiento: 8430 filas
+[igual]   conteo de vista_avistamiento_completo: [(8430,)]
+[igual]   contenido de vista_avistamiento_completo: 8430 filas
+[igual]   columnas de la vista (nombre y orden): [('avistamiento_id', 'gbif_id', 'especie_id', 'nombre_cientifico', 'nombre_comun', 'genero', 'familia_id', 'familia', 'orden_id', 'orden', 'provincia_id', 'provincia', 'observador_id', 'observador', 'fuente_id', 'fuente', 'latitud', 'longitud', 'fecha', 'mes', 'anio', 'licencia', 'occurrence_url', 'media_type')]
+
+== 7. El rol de la app no puede escribir ==
+[igual]   rechazado (ReadOnlySqlTransaction): INSERT INTO orden (nombre) VALUES ('prueba')
+[igual]   rechazado (ReadOnlySqlTransaction): UPDATE especie SET nombre_comun = 'x' WHERE especie_id = 1
+[igual]   rechazado (ReadOnlySqlTransaction): DELETE FROM avistamiento WHERE avistamiento_id = 1
+[igual]   rechazado (ReadOnlySqlTransaction): CREATE TABLE prueba (x int)
+[igual]   rechazado (InsufficientPrivilege): SET TRANSACTION READ WRITE; INSERT INTO orden (nombre) VALUES ('prueba')
+
+Resultado: 69 de 69 comprobaciones iguales, 0 con diferencias.
