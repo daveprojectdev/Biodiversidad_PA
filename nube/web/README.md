@@ -31,8 +31,11 @@ el de la versión entregada y no se toca.
   o la transcripción falla, el botón pasa al dictado del navegador (Web Speech
   API); si no hay ninguno de los dos, no aparece. Cada respuesta trae
   «Escuchar», que la dice con la voz de Roberto (`es-PA-RobertoNeural`,
-  `POST /hablar`); si la pregunta fue hablada, suena sola, como en la app
-  entregada. Si el servicio de voz falla, habla la voz del navegador. «Ver
+  `POST /hablar`). Desde el 2026-10-16, a pedido de David, toda respuesta
+  suena sola, escrita o hablada: en el mismo toque que pregunta, la página
+  suena 50 ms de silencio para que el navegador del teléfono permita el audio
+  que llega segundos después (como `desbloquearAudio()` de la app entregada);
+  si aun así lo bloquea, queda el botón. Si el servicio de voz falla, habla la voz del navegador. «Ver
   cómo funciona» dice cuánto tardó la transcripción. Detalles en
   `nube/worker/README.md`.
 - La CSP permite `blob:` en `media-src`: el MP3 de Roberto se reproduce desde

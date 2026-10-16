@@ -426,8 +426,9 @@ async function preguntar(pregunta, extra = {}) {
   estado.actual = entrada;
   mostrarRespuesta(entrada);
   pintarHistorial();
-  // Como en la app entregada: si preguntaste hablando, la respuesta se oye sola.
-  if (entrada.porVoz && !datos.error) escuchar(entrada);
+  // Toda respuesta se oye sola (pedido de David, como la app entregada con
+  // las preguntas habladas). Si el navegador lo bloquea, queda «Escuchar».
+  if (!datos.error) escuchar(entrada);
 }
 
 function pintarHistorial() {
@@ -461,6 +462,7 @@ function pintarSugeridas() {
     b.type = "button";
     b.textContent = s;
     b.addEventListener("click", () => {
+      desbloquearAudio();
       $("pregunta").value = s;
       preguntar(s);
     });
@@ -513,7 +515,11 @@ function prepararVoz() {
   if (!modoVoz) return; // el botón queda oculto
   const boton = $("hablar");
   boton.hidden = false;
-  boton.addEventListener("click", () => (modoVoz === "grabar" ? alternarGrabacion() : alternarDictado()));
+  boton.addEventListener("click", () => {
+    desbloquearAudio();
+    if (modoVoz === "grabar") alternarGrabacion();
+    else alternarDictado();
+  });
 }
 
 // Un formato que el navegador sepa grabar y Whisper sepa leer.
@@ -641,6 +647,38 @@ function prepararEscuchar(caja, entrada) {
 }
 
 const reproductor = new Audio();
+
+// La respuesta llega segundos después del clic, y los navegadores (Safari y
+// Chrome en el teléfono, sobre todo) solo dejan sonar audio iniciado por un
+// toque. Por eso, en el mismo toque que pregunta, este reproductor suena un
+// silencio de 50 ms y la voz del navegador dice una frase vacía: los dos
+// quedan habilitados para cuando llegue la respuesta. Lo mismo hacía
+// desbloquearAudio() en la app entregada.
+let audioDesbloqueado = false;
+function desbloquearAudio() {
+  if (audioDesbloqueado) return;
+  audioDesbloqueado = true;
+  const muestras = 1200; // 50 ms a 24 kHz
+  const wav = new DataView(new ArrayBuffer(44 + muestras * 2));
+  const texto = (o, t) => [...t].forEach((c, i) => wav.setUint8(o + i, c.charCodeAt(0)));
+  texto(0, "RIFF");
+  wav.setUint32(4, 36 + muestras * 2, true);
+  texto(8, "WAVEfmt ");
+  wav.setUint32(16, 16, true);
+  wav.setUint16(20, 1, true); // PCM
+  wav.setUint16(22, 1, true); // mono
+  wav.setUint32(24, 24000, true);
+  wav.setUint32(28, 48000, true);
+  wav.setUint16(32, 2, true);
+  wav.setUint16(34, 16, true);
+  texto(36, "data");
+  wav.setUint32(40, muestras * 2, true);
+  reproductor.src = URL.createObjectURL(new Blob([wav], { type: "audio/wav" }));
+  reproductor.play().catch(() => (audioDesbloqueado = false));
+  try {
+    window.speechSynthesis?.speak(new SpeechSynthesisUtterance(""));
+  } catch {}
+}
 let sonando = null; // la respuesta que se está oyendo
 
 function estadoEscuchar(texto, ocupado = false) {
@@ -710,11 +748,13 @@ async function escuchar(entrada) {
 document.querySelectorAll(".pestanas button").forEach((b) => b.addEventListener("click", () => cambiarColeccion(b.dataset.coleccion)));
 $("formulario").addEventListener("submit", (ev) => {
   ev.preventDefault();
+  desbloquearAudio();
   preguntar($("pregunta").value);
 });
 $("pregunta").addEventListener("keydown", (ev) => {
   if (ev.key === "Enter" && !ev.shiftKey) {
     ev.preventDefault();
+    desbloquearAudio();
     preguntar($("pregunta").value);
   }
 });
