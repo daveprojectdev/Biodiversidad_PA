@@ -66,6 +66,12 @@ del Toro?» muestra 10 de 38 (de 367 en aves) y «¿En qué provincias se ha vis
 Tyrannus melancholicus?» 10 de 13. Las 10 filas son correctas, pero no están
 todas.
 
+## En producción
+
+El Worker está desplegado en la cuenta de Cloudflare de biodiversidad sin
+dirección pública propia; lo usa Pages, que sirve el sitio en
+https://biodiversidad.davidameth.dev. Cómo se publica, en `nube/pages/README.md`.
+
 ## Límites y cuotas
 
 - Por persona (IP): 15 consultas por minuto (como `/consultar` en Flask) y 60
