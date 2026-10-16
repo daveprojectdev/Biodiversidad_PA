@@ -151,7 +151,9 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
 /* ── Mascotas: rana de ojos rojos (anfibios) y tucán pico iris (aves) ──
    Flotan en el Pacífico del mapa. Solo se anima transform y opacity. */
 .mapa-envoltura { position: relative; }
-.mascota { position: absolute; left: 46%; bottom: -5%; width: 25%; min-width: 104px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; animation: entrar .7s cubic-bezier(.2, .9, .3, 1.3) both; }
+/* Centrada en el agua entre Los Santos (termina en x=517) y Darién (empieza
+   en x=779): el centro del hueco es el 64,8 % del mapa. */
+.mascota { position: absolute; left: calc(64.8% - max(12.5%, 52px)); bottom: -5%; width: 25%; min-width: 104px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; animation: entrar .7s cubic-bezier(.2, .9, .3, 1.3) both; }
 .mascota svg { width: 100%; height: auto; display: block; overflow: visible; }
 [data-coleccion="anfibios"] .ave, [data-coleccion="aves"] .rana { display: none; }
 @keyframes entrar { from { opacity: 0; transform: translateY(18px) scale(.7); } to { opacity: 1; transform: none; } }
