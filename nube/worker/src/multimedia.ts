@@ -2,10 +2,11 @@
 // Fotos y audios de una observación de iNaturalist, para la página.
 // GET /multimedia?url=https://www.inaturalist.org/observations/<id>
 //
-// Solo se devuelven los archivos con licencia Creative Commons: los que
-// dicen «todos los derechos reservados» se quedan como enlace a iNaturalist.
-// Cada respuesta se guarda un día en la caché del Worker, para no cargar a
-// iNaturalist (piden no pasar de ~1 consulta por segundo).
+// Se piden a GBIF (de donde salieron los datos) y no a la API de
+// iNaturalist: iNaturalist responde 429 a las IP compartidas de Cloudflare.
+// GBIF solo publica material con licencia Creative Commons, con su autor;
+// los archivos «todos los derechos reservados» no aparecen y la página deja
+// el enlace a iNaturalist. Cada respuesta se guarda un día en la caché.
 // ============================================================
 
 export interface Archivo {
@@ -24,57 +25,66 @@ export interface Multimedia {
 
 const PATRON = /^https:\/\/(?:www\.)?inaturalist\.org\/observations\/(\d{1,12})\/?$/;
 const UN_DIA = 86_400;
-
-// iNaturalist manda el crédito en inglés; la página es en español.
-const enEspanol = (t: string) =>
-  t.replace("some rights reserved", "algunos derechos reservados").replace("no rights reserved", "sin derechos reservados");
 const AGENTE = "biodiversidad.davidameth.dev (hola@davidameth.dev)";
+// Solo estos servidores están permitidos en la CSP de la página (nube/web/_headers).
+const SERVIDORES = /^https:\/\/(inaturalist-open-data\.s3\.amazonaws\.com|static\.inaturalist\.org)\//;
 
-interface FotoInat { url?: string; license_code?: string | null; attribution?: string }
-interface SonidoInat { file_url?: string; license_code?: string | null; attribution?: string; file_content_type?: string }
+interface MediaGbif {
+  type?: string;
+  format?: string;
+  identifier?: string;
+  license?: string;
+  rightsHolder?: string;
+  creator?: string;
+}
 
 export function idDeObservacion(url: string | undefined): string | null {
   return url ? PATRON.exec(url)?.[1] ?? null : null;
 }
 
-// "cc-by-nc" -> "CC BY-NC"; "cc0" -> "CC0".
-const licencia = (codigo: string) => codigo.toUpperCase().replace(/^CC-/, "CC ");
+// "http://creativecommons.org/licenses/by-nc/4.0/" -> "CC BY-NC";
+// ".../publicdomain/zero/1.0/" -> "CC0". Lo que no sea CC devuelve null.
+function licencia(url: string | undefined): string | null {
+  if (!url || !/creativecommons\.org/.test(url)) return null;
+  if (/publicdomain\/zero/.test(url)) return "CC0";
+  const m = /licenses\/([a-z-]+)\//.exec(url);
+  return m ? `CC ${m[1].toUpperCase()}` : null;
+}
+
+function credito(m: MediaGbif, lic: string): string {
+  const autor = m.rightsHolder || m.creator || "autor de iNaturalist";
+  return lic === "CC0" ? `${autor}, sin derechos reservados (CC0)` : `(c) ${autor}, algunos derechos reservados (${lic})`;
+}
 
 export async function multimediaDe(id: string, ctx: { waitUntil(p: Promise<unknown>): void }): Promise<Multimedia> {
-  const clave = new Request(`https://cache.interna/multimedia/v2/${id}`);
+  const clave = new Request(`https://cache.interna/multimedia/v3/${id}`);
   const cache = caches.default;
   const guardada = await cache.match(clave);
   if (guardada) return guardada.json();
 
-  const r = await fetch(`https://api.inaturalist.org/v1/observations/${id}`, {
+  const enlace = `https://www.inaturalist.org/observations/${id}`;
+  const r = await fetch(`https://api.gbif.org/v1/occurrence/search?occurrenceID=${encodeURIComponent(enlace)}&limit=1`, {
     headers: { "User-Agent": AGENTE, Accept: "application/json" },
     signal: AbortSignal.timeout(10_000),
   });
-  if (!r.ok) throw new Error(`iNaturalist respondió ${r.status}`);
-  const datos = (await r.json()) as { results?: { photos?: FotoInat[]; sounds?: SonidoInat[] }[] };
-  const obs = datos.results?.[0] ?? {};
+  if (!r.ok) throw new Error(`GBIF respondió ${r.status}`);
+  const datos = (await r.json()) as { results?: { media?: MediaGbif[] }[] };
+  const media = (datos.results?.[0]?.media ?? []).filter((m) => m.identifier && SERVIDORES.test(m.identifier));
 
-  const resultado: Multimedia = {
-    enlace: `https://www.inaturalist.org/observations/${id}`,
-    fotos: (obs.photos ?? [])
-      .filter((f) => f.url && f.license_code)
-      .slice(0, 4)
-      .map((f) => ({
-        url: f.url!.replace("/square.", "/small."),
-        grande: f.url!.replace("/square.", "/large."),
-        credito: enEspanol(f.attribution ?? ""),
-        licencia: licencia(f.license_code!),
-      })),
-    sonidos: (obs.sounds ?? [])
-      .filter((s) => s.file_url && s.license_code)
-      .slice(0, 2)
-      .map((s) => ({
-        url: s.file_url!,
-        tipo: s.file_content_type,
-        credito: enEspanol(s.attribution ?? ""),
-        licencia: licencia(s.license_code!),
-      })),
-  };
+  const fotos: Archivo[] = [];
+  const sonidos: Archivo[] = [];
+  for (const m of media) {
+    const lic = licencia(m.license);
+    if (!lic) continue;
+    if (m.type === "StillImage" && fotos.length < 4) {
+      const url = m.identifier!;
+      fotos.push({ url: url.replace("/original.", "/small."), grande: url.replace("/original.", "/large."), credito: credito(m, lic), licencia: lic });
+    } else if (m.type === "Sound" && sonidos.length < 2) {
+      sonidos.push({ url: m.identifier!, tipo: m.format, credito: credito(m, lic), licencia: lic });
+    }
+  }
+
+  const resultado: Multimedia = { enlace, fotos, sonidos };
   const respuesta = new Response(JSON.stringify(resultado), {
     headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${UN_DIA}` },
   });
