@@ -1,9 +1,11 @@
 // ============================================================
 // API de biodiversidad en Cloudflare Workers + Hono.
-// Port de app/app_flask.py sin la voz (eso es la fase 4):
-//   GET  /estado     servidor vivo y colecciones
-//   GET  /explorar   panorama de una colección, SQL fijo, sin modelo
-//   POST /consultar  pregunta en español -> SQL -> filas
+// Port de app/app_flask.py, con la voz desde la fase 4:
+//   GET  /estado       servidor vivo y colecciones
+//   GET  /explorar     panorama de una colección, SQL fijo, sin modelo
+//   POST /consultar    pregunta en español -> SQL -> filas
+//   POST /transcribir  audio grabado -> texto (Groq Whisper)
+//   POST /hablar       texto -> MP3 con la voz es-PA-RobertoNeural
 // Las respuestas tienen la misma forma que las de Flask, para que el
 // frontend pueda pasar de una a otra.
 // ============================================================
@@ -17,6 +19,7 @@ import { LimiteDeConsultas, type Veredicto } from "./limite";
 import { generarSqlCascada, type EnvLlm } from "./llm";
 import { idDeObservacion, multimediaDe } from "./multimedia";
 import { construirPrompt } from "./prompt";
+import { audioDe, CuotaAgotada, extensionDe, MAX_AUDIO_BYTES, MAX_TEXTO_HABLADO, MODELO_TRANSCRIPCION, transcribir, VOZ } from "./voz";
 import { adaptarDialecto, asegurarColumnasMultimedia, calificarTablas, esSqlSeguro, limitarFilas } from "./sql";
 
 export { LimiteDeConsultas };
@@ -250,6 +253,69 @@ app.get("/multimedia", async (c) => {
   } catch (e) {
     console.warn(`Multimedia ${id}: ${e}`);
     return c.json({ error: "No se pudo traer la multimedia de iNaturalist" }, 502);
+  }
+});
+
+// ── Voz (fase 4, ver voz.ts) ──
+
+// Cada transcripción va seguida de una consulta, que ya tiene su límite; este
+// cuida la cuota de Whisper en Groq (2.000 audios al día en el plan gratis).
+app.post("/transcribir", async (c) => {
+  const extension = extensionDe(c.req.header("content-type"));
+  if (!extension) return c.json({ error: "Formato de audio no admitido" }, 415);
+  const audio = await c.req.arrayBuffer();
+  if (!audio.byteLength) return c.json({ error: "Falta el audio" }, 400);
+  if (audio.byteLength > MAX_AUDIO_BYTES) return c.json({ error: "La grabación es demasiado larga" }, 413);
+
+  const persona = c.req.header("cf-connecting-ip") ?? "local";
+  const propio = await c.env.LIMITE.getByName(`transcribir:${persona}`).consumir(10, 100);
+  const limite = propio.permitido
+    ? await c.env.LIMITE.getByName("transcribir:global").consumir(0, 1500)
+    : propio;
+  if (!limite.permitido) {
+    if (limite.reintentarEnSegundos) c.header("Retry-After", String(limite.reintentarEnSegundos));
+    return c.json({ error: MENSAJES_LIMITE[propio.permitido ? "global" : (limite.motivo ?? "minuto")] }, 429);
+  }
+
+  const t0 = Date.now();
+  try {
+    const texto = await transcribir(c.env.GROQ_API_KEY, audio, extension);
+    console.log(`TRANSCRIBIR: ${audio.byteLength} bytes ${extension} | ${Date.now() - t0} ms | ${texto.length} caracteres`);
+    return c.json({ texto, modelo: MODELO_TRANSCRIPCION, ms: Date.now() - t0 });
+  } catch (e) {
+    console.error(`Error en /transcribir: ${e}`);
+    if (e instanceof CuotaAgotada) {
+      c.header("Retry-After", "60");
+      return c.json({ error: "La transcripción está ocupada. Intenta de nuevo en un minuto." }, 503);
+    }
+    return c.json({ error: "No se pudo transcribir el audio" }, 502);
+  }
+});
+
+// Devuelve el MP3. Si Microsoft no responde, 503 y la página usa la voz del navegador.
+app.post("/hablar", async (c) => {
+  const datos = await c.req.json().catch(() => ({}) as Record<string, unknown>);
+  const texto = typeof datos.texto === "string" ? datos.texto.trim() : "";
+  if (!texto) return c.json({ error: "Falta el campo 'texto'" }, 400);
+  if (texto.length > MAX_TEXTO_HABLADO) return c.json({ error: "El texto es demasiado largo" }, 400);
+
+  const persona = c.req.header("cf-connecting-ip") ?? "local";
+  const limite = await c.env.LIMITE.getByName(`hablar:${persona}`).consumir(20, 200);
+  if (!limite.permitido) return c.json({ error: MENSAJES_LIMITE[limite.motivo ?? "minuto"] }, 429);
+
+  const t0 = Date.now();
+  try {
+    const { audio, deCache } = await audioDe(texto, c.executionCtx);
+    console.log(`HABLAR: ${texto.length} caracteres | ${deCache ? "caché" : "Microsoft"} | ${Date.now() - t0} ms`);
+    return c.body(audio, 200, {
+      "Content-Type": "audio/mpeg",
+      "Cache-Control": "private, max-age=86400",
+      "X-Voz": VOZ,
+      "X-Voz-Cache": deCache ? "hit" : "miss",
+    });
+  } catch (e) {
+    console.error(`Error en /hablar: ${e}`);
+    return c.json({ error: "El servicio de voz no respondió" }, 503);
   }
 });
 

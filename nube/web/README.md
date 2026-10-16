@@ -25,8 +25,18 @@ el de la versión entregada y no se toca.
 - Color por colección: verde para anfibios y ámbar para aves (elegido por
   David; va con el pico del tucán). El tono del texto y los botones (`--c`)
   cumple 5:1 sobre blanco; el mapa usa la escala `--c1` a `--c4`.
-- «Hablar» usa el dictado del navegador (Web Speech API) mientras no exista la
-  voz propia (fase 4). Donde el navegador no lo tiene, el botón no aparece.
+- Voz (fase 4, desde el 2026-10-16): «Hablar» graba en el navegador y el
+  Worker pasa el audio a texto con Whisper (`POST /transcribir`); la pregunta
+  sale escrita en la caja y se consulta sola. Si el navegador no puede grabar,
+  o la transcripción falla, el botón pasa al dictado del navegador (Web Speech
+  API); si no hay ninguno de los dos, no aparece. Cada respuesta trae
+  «Escuchar», que la dice con la voz de Roberto (`es-PA-RobertoNeural`,
+  `POST /hablar`); si la pregunta fue hablada, suena sola, como en la app
+  entregada. Si el servicio de voz falla, habla la voz del navegador. «Ver
+  cómo funciona» dice cuánto tardó la transcripción. Detalles en
+  `nube/worker/README.md`.
+- La CSP permite `blob:` en `media-src`: el MP3 de Roberto se reproduce desde
+  la memoria del navegador.
 - Mascotas, pedidas por David: con Anfibios, la rana de ojos rojos (*Agalychnis
   callidryas*) en su nenúfar (se probó la rana dorada y David prefirió esta);
   con Aves, un tucán pico iris (*Ramphastos sulfuratus*, el tucán más avistado:

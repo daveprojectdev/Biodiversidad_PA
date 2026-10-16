@@ -1,7 +1,7 @@
 # API en Cloudflare Workers (Hono)
 
-Fase 3 de la migración: el port de `app/app_flask.py` a un Worker, sin la voz
-(fase 4). Recibe una pregunta en español, pide el SQL a un modelo, lo corre en
+Fases 3 y 4 de la migración: el port de `app/app_flask.py` a un Worker, con la
+voz desde el 2026-10-16. Recibe una pregunta en español, pide el SQL a un modelo, lo corre en
 Neon con el rol de solo lectura y devuelve las filas, con la misma forma de
 respuesta que la app de Flask.
 
@@ -14,6 +14,8 @@ respuesta que la app de Flask.
 | `GET /explorar?coleccion=amphibia\|aves` | Panorama de la colección, SQL fijo, sin modelo (incluye especies y avistamientos por provincia) |
 | `POST /consultar` `{pregunta, coleccion}` | Pregunta → SQL → filas, con `tiempos` (modelo y base, en ms) e `intentos` |
 | `GET /multimedia?url=<observación de iNaturalist>` | Fotos y audios con licencia CC de esa observación, con crédito; caché de un día y 60 por minuto por persona |
+| `POST /transcribir` (cuerpo: el audio, `Content-Type` `audio/webm`, `audio/mp4`, `audio/ogg`, `audio/mpeg` o `audio/wav`; hasta 2 MB) | Texto de la pregunta hablada, con Groq `whisper-large-v3-turbo` en español: `{texto, modelo, ms}` |
+| `POST /hablar` `{texto}` (hasta 400 caracteres) | MP3 con la voz `es-PA-RobertoNeural`; `X-Voz-Cache: hit` si salió de la caché. Si Microsoft no responde, 503 |
 
 `coleccion` acepta `amphibia` (como el frontend entregado), `anfibios` o `aves`.
 
@@ -26,11 +28,14 @@ respuesta que la app de Flask.
 | `src/llm.ts` | Cascada Groq (`openai/gpt-oss-20b`) → modelos de Gemini en orden (`GEMINI_MODELOS`), por `fetch` |
 | `src/db.ts` | Consultas a Neon por HTTP en una transacción de solo lectura |
 | `src/multimedia.ts` | Fotos y audios de una observación de iNaturalist, pedidos a GBIF (iNaturalist da 429 a las IP de Cloudflare); solo licencia CC, con caché |
+| `src/voz.ts` | Transcripción con Groq y cliente propio del servicio de voz de Microsoft Edge (WebSocket), con caché de 30 días por texto |
+| `src/drm.ts` | El token `Sec-MS-GEC` (versión 2) que ese servicio exige |
 | `src/limite.ts` | Límite por persona (minuto y día) y tope diario global, con un Durable Object |
 | `src/index.ts` | Rutas, guarda de colección y autocorrección (hasta 3 intentos con el error de Postgres) |
 | `scripts/dev.mjs` | `wrangler dev` con el token de `nube/.env` en el entorno |
 | `scripts/generar_mapa.py` | Genera `nube/web/mapa-panama.svg` desde geoBoundaries |
 | `scripts/preparar-dev-vars.mjs` | Arma `.dev.vars` desde `app/.env` y `nube/.env`, sin mostrar valores |
+| `scripts/probar-drm.mjs` | Compara el token de `drm.ts` con el del paquete `edge-tts` de Python |
 | `scripts/validar_rubrica.py` | Las 10 preguntas de la rúbrica por el Worker, contra el SQL de referencia |
 | `validacion_*.txt` | Informes de la validación, con el proveedor que respondió |
 
@@ -65,6 +70,41 @@ prompt (heredada de la app) corta las listas. «¿Qué especies se vieron en Boc
 del Toro?» muestra 10 de 38 (de 367 en aves) y «¿En qué provincias se ha visto
 Tyrannus melancholicus?» 10 de 13. Las 10 filas son correctas, pero no están
 todas.
+
+## La voz (fase 4)
+
+Lo que en la app de Flask hacían faster-whisper y edge-tts en el mismo equipo:
+
+- **Entrada:** la página graba (MediaRecorder) y manda el audio a
+  `/transcribir`, que lo pasa a Groq `whisper-large-v3-turbo` con la misma
+  `GROQ_API_KEY`. Whisper tiene cuota aparte de la del modelo de SQL (en el
+  plan gratis, 2.000 audios al día), así que hablar no resta preguntas: la
+  pregunta transcrita pasa después por `/consultar` como una escrita. Medido
+  el 2026-10-16: unos 500 ms por pregunta.
+- **Salida:** `/hablar` sintetiza con `es-PA-RobertoNeural`, la voz de la app
+  entregada, desde el servicio de lectura en voz alta de Microsoft Edge (el
+  que usa edge-tts). El cliente es propio (`voz.ts`, sin dependencias, para no
+  arrastrar la AGPL de `@edge-tts/universal`): abre el WebSocket con los
+  encabezados del navegador Edge y el token de `drm.ts`, manda la
+  configuración y el SSML y junta el MP3. El token v2 se reescribió a partir
+  de edge-tts 7.3.1 (rany2, `drm.py`); sin él, el servicio responde 403, como
+  le pasó a la app local hasta actualizar edge-tts. Si Microsoft cambia el
+  protocolo, `npm run probar-drm` (con edge-tts actualizado en Python) dice
+  si el token sigue igual.
+- **Caché:** cada audio se guarda 30 días (Cache API) por voz y texto. Muchas
+  respuestas se repiten («Se encontraron 10 resultados…»), así que la mayoría
+  no llega a Microsoft. Medido en local: 1,3 s la primera vez, 0,25 s desde la
+  caché.
+- **Respaldo:** si `/hablar` falla, la página habla con la voz del navegador
+  (`speechSynthesis`, en español). Si el navegador no puede grabar o
+  `/transcribir` falla, queda el dictado del navegador (Web Speech API).
+- **Límites por persona:** `/transcribir` 10 por minuto y 100 por día (y 1.500
+  al día en todo el sistema, debajo de la cuota de Groq); `/hablar` 20 por
+  minuto y 200 por día.
+
+El texto que se dice es el de `formatear_respuesta_hablada` de la app
+(`textoHablado` en `nube/web/app.js`): un resultado de hasta 4 campos se lee
+entero; si no, solo cuántos resultados hay.
 
 ## En producción
 

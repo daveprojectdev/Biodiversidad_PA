@@ -5,7 +5,8 @@
   "scripts": {
     "vars": "node scripts/preparar-dev-vars.mjs",
     "dev": "node scripts/dev.mjs",
-    "tipos": "tsc --noEmit"
+    "tipos": "tsc --noEmit",
+    "probar-drm": "node --experimental-strip-types scripts/probar-drm.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "1.2.0",

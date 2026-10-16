@@ -3,7 +3,8 @@
 El sitio público es **https://biodiversidad.davidameth.dev**.
 
 - **Pages** (proyecto `biodiversidad`, `biodiversidad.pages.dev`) sirve
-  `nube/web` y reenvía `/consultar`, `/explorar`, `/multimedia` y `/estado` al
+  `nube/web` y reenvía `/consultar`, `/explorar`, `/multimedia`, `/estado`,
+  `/transcribir` y `/hablar` al
   Worker `biodiversidad-api` por un service binding (`functions/*.js`).
 - **El Worker** no tiene dirección pública propia (`workers_dev: false`): solo
   lo llama Pages.

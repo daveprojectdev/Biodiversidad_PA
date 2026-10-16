@@ -102,6 +102,7 @@ h1 span { color: var(--c); }
 .respuesta .grande { font-size: clamp(48px, 7vw, 72px); font-weight: 800; letter-spacing: -.04em; line-height: 1; color: var(--c); margin: 2px 0 6px; overflow-wrap: anywhere; }
 .respuesta .grande.texto { font-size: clamp(28px, 4vw, 40px); font-style: italic; font-weight: 700; }
 .respuesta .aviso { margin-top: 8px; font-size: 14px; color: var(--gris); }
+.respuesta .escuchar { margin-top: 12px; }
 .tabla { margin-top: 12px; overflow-x: auto; max-height: 360px; overflow-y: auto; }
 .tabla table { width: 100%; border-collapse: collapse; font-size: 15px; }
 .tabla th { position: sticky; top: 0; background: var(--blanco); text-align: left; font: 11px var(--mono); color: var(--gris); text-transform: uppercase; letter-spacing: .06em; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--tinta); white-space: nowrap; }

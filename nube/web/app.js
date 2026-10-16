@@ -1,7 +1,8 @@
 // ============================================================
 // Atlas vivo — la página de la versión en la nube.
-// Habla con el Worker en la misma dirección: GET /explorar y
-// POST /consultar (ver nube/worker/README.md).
+// Habla con el Worker en la misma dirección: GET /explorar,
+// POST /consultar y, para la voz, POST /transcribir y POST /hablar
+// (ver nube/worker/README.md).
 // ============================================================
 
 const COLECCIONES = {
@@ -297,13 +298,16 @@ function nombreProveedor(p) {
   return p.startsWith("gemini:") ? `${p.slice(7)} (Google)` : p;
 }
 
-function comoFunciona(datos) {
+function comoFunciona(datos, transcripcion) {
   const t = datos.tiempos ?? {};
   const intentos = datos.intentos > 1 ? ` · ${datos.intentos} intentos` : "";
+  const pregunta = transcripcion
+    ? `por voz · ${escapar(transcripcion.modelo)} (Groq) la pasa a texto · ${num(transcripcion.ms)} ms`
+    : "en español, texto o voz";
   return `<details>
     <summary>Ver cómo funciona</summary>
     <div class="pasos">
-      <div><b>1 · pregunta</b>en español, texto o voz</div>
+      <div><b>1 · pregunta</b>${pregunta}</div>
       <div><b>2 · modelo</b>${escapar(nombreProveedor(datos.proveedor_llm))} escribe el SQL · ${num(Math.round(t.modelo_ms ?? 0))} ms${intentos}</div>
       <div><b>3 · guardia</b>solo SELECT, usuario de solo lectura, máx. 100 filas</div>
       <div><b>4 · Postgres</b>Neon · ${num(datos.total ?? 0)} filas · ${num(Math.round(t.base_ms ?? 0))} ms</div>
@@ -313,19 +317,21 @@ function comoFunciona(datos) {
 }
 
 function mostrarRespuesta(entrada) {
-  const { datos, pregunta } = entrada;
+  const { datos, pregunta, transcripcion } = entrada;
   const caja = $("respuesta");
   caja.hidden = false;
+  detenerVoz();
 
   if (datos.error) {
-    caja.innerHTML = `<p class="error">${escapar(datos.error)}</p>${datos.sql ? comoFunciona(datos) : ""}`;
+    caja.innerHTML = `<p class="error">${escapar(datos.error)}</p>${datos.sql ? comoFunciona(datos, transcripcion) : ""}`;
     return;
   }
   const filas = datos.filas ?? [];
   $("titulo-mapa").innerHTML = escapar(pregunta);
   if (!filas.length) {
     $("nota-mapa").textContent = "sin resultados";
-    caja.innerHTML = `<p class="frase">La consulta no encontró nada.</p>${comoFunciona(datos)}`;
+    caja.innerHTML = `<p class="frase">La consulta no encontró nada.</p>${botonEscuchar()}${comoFunciona(datos, transcripcion)}`;
+    prepararEscuchar(caja, entrada);
     return;
   }
 
@@ -351,7 +357,8 @@ function mostrarRespuesta(entrada) {
   } else {
     cuerpo = `<p class="frase">${frase(datos, filas, colProv, colNum)}</p>${tabla(filas)}`;
   }
-  caja.innerHTML = cuerpo + aviso + observaciones(filas) + comoFunciona(datos);
+  caja.innerHTML = cuerpo + aviso + botonEscuchar() + observaciones(filas) + comoFunciona(datos, transcripcion);
+  prepararEscuchar(caja, entrada);
   llenarGaleria(caja);
 
   if (colProv) {
@@ -380,7 +387,8 @@ function mostrarRespuesta(entrada) {
 
 const MENSAJE_RED = "No se pudo conectar con el servidor. Revisa tu conexión e intenta de nuevo.";
 
-async function preguntar(pregunta) {
+// extra: { porVoz, transcripcion } cuando la pregunta llegó hablando.
+async function preguntar(pregunta, extra = {}) {
   pregunta = pregunta.trim();
   if (!pregunta) return;
   const boton = $("preguntar");
@@ -402,7 +410,7 @@ async function preguntar(pregunta) {
   } finally {
     boton.disabled = false;
   }
-  const entrada = { pregunta, coleccion: estado.coleccion, datos };
+  const entrada = { pregunta, coleccion: estado.coleccion, datos, ...extra };
   if (!datos.error || datos.sql) {
     estado.historial.unshift(entrada);
     estado.historial = estado.historial.slice(0, 8);
@@ -410,6 +418,8 @@ async function preguntar(pregunta) {
   estado.actual = entrada;
   mostrarRespuesta(entrada);
   pintarHistorial();
+  // Como en la app entregada: si preguntaste hablando, la respuesta se oye sola.
+  if (entrada.porVoz && !datos.error) escuchar(entrada);
 }
 
 function pintarHistorial() {
@@ -467,43 +477,222 @@ async function cambiarColeccion(coleccion, limpiar = true) {
   }
 }
 
-// ── Voz: dictado del navegador, mientras llega la voz propia (fase 4) ──
+// ── Voz (fase 4) ──
+// Entrada: se graba en el navegador y el Worker la pasa a texto con Whisper
+// (POST /transcribir). Si el navegador no puede grabar, o la transcripción
+// falla, queda el dictado del navegador (Web Speech API).
+// Salida: «Escuchar» pide el MP3 con la voz de Roberto, es-PA-RobertoNeural
+// (POST /hablar). Si el servicio de Microsoft falla, habla la voz del
+// propio navegador.
 
-function prepararDictado() {
-  const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!Reconocimiento) return; // el botón queda oculto
+const MAX_GRABACION_MS = 30_000;
+const MIN_GRABACION_MS = 700; // menos que esto es un toque sin querer
+const MAX_TEXTO_HABLADO = 400; // el mismo tope que el Worker
+const ESTADO_CAJA = "texto o voz · en español";
+const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
+const puedeGrabar = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
+let modoVoz = puedeGrabar ? "grabar" : Reconocimiento ? "dictado" : null;
+
+const avisoCaja = (texto) => ($("estado-caja").textContent = texto);
+
+function botonHablar(grabando) {
+  const b = $("hablar");
+  b.classList.toggle("grabando", grabando);
+  b.textContent = grabando ? "■ Detener" : "● Hablar";
+}
+
+function prepararVoz() {
+  if (!modoVoz) return; // el botón queda oculto
   const boton = $("hablar");
   boton.hidden = false;
-  boton.title = "Dictado del navegador";
-  let rec = null;
-  boton.addEventListener("click", () => {
-    if (rec) {
-      rec.stop();
+  boton.addEventListener("click", () => (modoVoz === "grabar" ? alternarGrabacion() : alternarDictado()));
+}
+
+// Un formato que el navegador sepa grabar y Whisper sepa leer.
+function formatoDeGrabacion() {
+  return ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"].find((t) => MediaRecorder.isTypeSupported?.(t)) ?? "";
+}
+
+let grabadora = null;
+
+async function alternarGrabacion() {
+  if (grabadora) {
+    grabadora.stop();
+    return;
+  }
+  let flujo;
+  try {
+    flujo = await navigator.mediaDevices.getUserMedia({ audio: true });
+  } catch (e) {
+    avisoCaja(e.name === "NotAllowedError" ? "permite el micrófono para hablar" : "no se encontró un micrófono");
+    return;
+  }
+  const tipo = formatoDeGrabacion();
+  const rec = tipo ? new MediaRecorder(flujo, { mimeType: tipo }) : new MediaRecorder(flujo);
+  const trozos = [];
+  rec.ondataavailable = (ev) => ev.data.size && trozos.push(ev.data);
+  const tope = setTimeout(() => rec.state === "recording" && rec.stop(), MAX_GRABACION_MS);
+  let inicio = 0;
+  rec.onstart = () => (inicio = performance.now());
+  rec.onstop = () => {
+    clearTimeout(tope);
+    flujo.getTracks().forEach((t) => t.stop());
+    grabadora = null;
+    botonHablar(false);
+    const audio = new Blob(trozos, { type: rec.mimeType || tipo || "audio/webm" });
+    if (!audio.size || performance.now() - inicio < MIN_GRABACION_MS) avisoCaja("no se oyó nada, intenta de nuevo");
+    else enviarGrabacion(audio);
+  };
+  grabadora = rec;
+  rec.start(1000); // un trozo por segundo: si el flujo se corta, no se pierde todo
+  botonHablar(true);
+  avisoCaja("grabando… toca Detener al terminar");
+}
+
+async function enviarGrabacion(audio) {
+  const boton = $("hablar");
+  boton.disabled = true;
+  avisoCaja("pasando tu voz a texto…");
+  let r = null;
+  let datos = null;
+  try {
+    r = await fetch("/transcribir", { method: "POST", headers: { "Content-Type": audio.type }, body: audio });
+    datos = await r.json().catch(() => null);
+  } catch {}
+  boton.disabled = false;
+  if (r?.ok && datos) {
+    if (!datos.texto) {
+      avisoCaja("no se entendió, intenta de nuevo");
       return;
     }
-    rec = new Reconocimiento();
-    rec.lang = "es-PA";
-    rec.interimResults = true;
-    let final = "";
-    rec.onresult = (ev) => {
-      final = [...ev.results].map((r) => r[0].transcript).join(" ");
-      $("pregunta").value = final;
-    };
-    rec.onend = () => {
-      boton.classList.remove("grabando");
-      boton.textContent = "● Hablar";
-      $("estado-caja").textContent = "texto o voz · en español";
-      rec = null;
-      if (final.trim()) preguntar(final);
-    };
-    rec.onerror = (ev) => {
-      $("estado-caja").textContent = ev.error === "not-allowed" ? "permite el micrófono para hablar" : "no se entendió, intenta de nuevo";
-    };
-    boton.classList.add("grabando");
-    boton.textContent = "■ Detener";
-    $("estado-caja").textContent = "escuchando…";
-    rec.start();
-  });
+    avisoCaja(ESTADO_CAJA);
+    $("pregunta").value = datos.texto;
+    preguntar(datos.texto, { porVoz: true, transcripcion: { modelo: datos.modelo, ms: datos.ms } });
+    return;
+  }
+  if (r?.status === 429 && datos?.error) {
+    avisoCaja(datos.error);
+    return;
+  }
+  // Falló la transcripción: queda el dictado del navegador, si lo tiene.
+  if (Reconocimiento) {
+    modoVoz = "dictado";
+    avisoCaja("no se pudo transcribir; toca Hablar para usar el dictado del navegador");
+  } else {
+    avisoCaja("no se pudo transcribir; escribe tu pregunta");
+  }
+}
+
+let dictado = null;
+
+function alternarDictado() {
+  if (dictado) {
+    dictado.stop();
+    return;
+  }
+  dictado = new Reconocimiento();
+  dictado.lang = "es-PA";
+  dictado.interimResults = true;
+  let final = "";
+  dictado.onresult = (ev) => {
+    final = [...ev.results].map((r) => r[0].transcript).join(" ");
+    $("pregunta").value = final;
+  };
+  dictado.onend = () => {
+    botonHablar(false);
+    avisoCaja(ESTADO_CAJA);
+    dictado = null;
+    if (final.trim()) preguntar(final, { porVoz: true });
+  };
+  dictado.onerror = (ev) => {
+    avisoCaja(ev.error === "not-allowed" ? "permite el micrófono para hablar" : "no se entendió, intenta de nuevo");
+  };
+  botonHablar(true);
+  avisoCaja("escuchando…");
+  dictado.start();
+}
+
+// Lo que se dice en voz alta, como formatear_respuesta_hablada de app/app_flask.py.
+function textoHablado(filas) {
+  if (!filas.length) return "No se encontraron resultados para tu pregunta.";
+  if (filas.length === 1) {
+    const valores = Object.entries(filas[0])
+      .filter(([c, v]) => !OCULTAS.has(c) && v != null)
+      .map(([, v]) => String(v));
+    const texto = `El resultado es: ${valores.join(", ")}.`;
+    if (valores.length > 0 && valores.length <= 4 && texto.length <= MAX_TEXTO_HABLADO) return texto;
+    return "Se encontró 1 resultado. Revisa la pantalla para el detalle completo.";
+  }
+  return `Se encontraron ${filas.length} resultados. Revisa la tabla en pantalla para el detalle completo.`;
+}
+
+const botonEscuchar = () => '<p class="escuchar"><button class="btn" type="button" data-escuchar>▶ Escuchar</button></p>';
+
+function prepararEscuchar(caja, entrada) {
+  caja.querySelector("[data-escuchar]")?.addEventListener("click", () => (sonando === entrada ? detenerVoz() : escuchar(entrada)));
+}
+
+const reproductor = new Audio();
+let sonando = null; // la respuesta que se está oyendo
+
+function estadoEscuchar(texto, ocupado = false) {
+  const b = $("respuesta").querySelector("[data-escuchar]");
+  if (!b) return;
+  b.textContent = texto;
+  b.disabled = ocupado;
+}
+
+function detenerVoz() {
+  reproductor.pause();
+  window.speechSynthesis?.cancel();
+  if (sonando) {
+    sonando = null;
+    estadoEscuchar("▶ Escuchar");
+  }
+}
+
+async function escuchar(entrada) {
+  detenerVoz();
+  sonando = entrada;
+  const texto = textoHablado(entrada.datos.filas ?? []);
+  if (!entrada.audio) {
+    estadoEscuchar("Preparando la voz…", true);
+    try {
+      const r = await fetch("/hablar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ texto }),
+      });
+      if (r.ok && r.headers.get("content-type")?.startsWith("audio/")) entrada.audio = URL.createObjectURL(await r.blob());
+    } catch {}
+    if (sonando !== entrada) return; // la detuviste o llegó otra respuesta
+  }
+  estadoEscuchar("■ Detener");
+  const terminar = () => {
+    if (sonando !== entrada) return;
+    sonando = null;
+    estadoEscuchar("▶ Escuchar");
+  };
+  if (entrada.audio) {
+    reproductor.src = entrada.audio;
+    reproductor.onended = terminar;
+    try {
+      await reproductor.play();
+      return;
+    } catch (e) {
+      // El navegador no deja sonar sin un toque: queda el botón.
+      if (e.name === "NotAllowedError") return terminar();
+    }
+  }
+  // Respaldo: la voz del navegador, con el mismo texto.
+  if (!window.speechSynthesis) return terminar();
+  const dicho = new SpeechSynthesisUtterance(texto);
+  dicho.lang = "es-PA";
+  const voces = speechSynthesis.getVoices();
+  dicho.voice = voces.find((v) => v.lang === "es-PA") ?? voces.find((v) => v.lang?.startsWith("es")) ?? null;
+  dicho.onend = terminar;
+  dicho.onerror = terminar;
+  speechSynthesis.speak(dicho);
 }
 
 // ── Inicio ──
@@ -553,6 +742,6 @@ for (const id of ["rana", "ave"]) {
   });
 }
 
-prepararDictado();
+prepararVoz();
 await cargarMapa();
 await cambiarColeccion("anfibios");
