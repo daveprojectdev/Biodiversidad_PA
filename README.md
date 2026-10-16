@@ -41,4 +41,4 @@ OpenStreetMap, ODbL 1.0.
 
 - Para avisar de una vulnerabilidad: [`SECURITY.md`](SECURITY.md) (hola@davidameth.dev, respuesta en 3 días hábiles).
 - Privacidad y condiciones del sitio: https://biodiversidad.davidameth.dev/privacidad
-- El código no tiene licencia de uso todavía: se puede leer, pero no reutilizar sin permiso. Los datos tienen la suya (arriba).
+- El código tiene licencia MIT ([`LICENSE`](LICENSE)): se puede reutilizar citando al autor. No cubre los datos, que siguen con la licencia de GBIF (CC BY-NC 4.0, arriba), ni las fotos y audios de iNaturalist, ni las fuentes tipográficas (OFL, en `nube/web/fuentes/`).
