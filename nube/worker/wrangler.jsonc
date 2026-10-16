@@ -7,6 +7,10 @@
   "name": "biodiversidad-api",
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
+  // La página (nube/web) la sirve el mismo Worker: misma dirección que la
+  // API, sin CORS y un solo despliegue. Lo que no es un archivo de ahí cae
+  // en las rutas de Hono (/estado, /explorar, /consultar).
+  "assets": { "directory": "../web", "not_found_handling": "none" },
   "observability": { "enabled": true },
   "durable_objects": {
     "bindings": [{ "name": "LIMITE", "class_name": "LimiteDeConsultas" }]

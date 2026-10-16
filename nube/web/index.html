@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" data-coleccion="anfibios">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atlas vivo · Biodiversidad de Panamá</title>
+<meta name="description" content="Pregunta en español por los anfibios y las aves de Panamá. Un modelo convierte tu pregunta en SQL y la respuesta sale de avistamientos reales de GBIF, dibujada sobre el mapa.">
+<meta name="color-scheme" content="light">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,400;0,500;0,700;0,800;1,500&family=Fragment+Mono&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/estilos.css">
+</head>
+<body>
+<div class="pagina">
+  <header class="cabecera">
+    <a class="marca" href="/">Atlas vivo <span>·</span> Panamá</a>
+    <nav class="pestanas" aria-label="Colección">
+      <button type="button" data-coleccion="anfibios" aria-pressed="true">Anfibios</button>
+      <button type="button" data-coleccion="aves" aria-pressed="false">Aves</button>
+    </nav>
+  </header>
+
+  <main class="escena">
+    <section class="lado-pregunta">
+      <h1>Pregunta, y mira dónde <span>vive</span> la respuesta.</h1>
+      <p class="lead" id="lead">Avistamientos reales de anfibios hechos por personas en todo el país. Pregunta en español, escribiendo o hablando.</p>
+
+      <form class="caja" id="formulario">
+        <label class="oculto" for="pregunta">Tu pregunta</label>
+        <textarea id="pregunta" rows="2" maxlength="500" placeholder="¿Qué provincia tiene más especies?" required></textarea>
+        <div class="acciones">
+          <small id="estado-caja">texto o voz · en español</small>
+          <div>
+            <button class="btn" type="button" id="hablar" hidden>● Hablar</button>
+            <button class="btn pri" type="submit" id="preguntar">Preguntar</button>
+          </div>
+        </div>
+      </form>
+
+      <div class="sugeridas" id="sugeridas" aria-label="Preguntas de ejemplo"></div>
+
+      <div class="anteriores" id="anteriores" hidden>
+        <h2>Tus preguntas</h2>
+        <ol id="lista-anteriores"></ol>
+      </div>
+    </section>
+
+    <section class="mapa-tarjeta" aria-live="polite">
+      <div class="titulo-mapa">
+        <h2 id="titulo-mapa">Especies por provincia</h2>
+        <small id="nota-mapa">cargando…</small>
+      </div>
+      <div class="mapa" id="mapa"></div>
+      <div class="escala" aria-hidden="true">menos <i></i><i></i><i></i><i></i> más</div>
+      <p class="fuera-mapa" id="fuera-mapa" hidden></p>
+      <div class="respuesta" id="respuesta" hidden></div>
+    </section>
+  </main>
+
+  <section class="resumen" id="resumen" aria-label="La colección en cifras"></section>
+
+  <footer class="pie">
+    <span>Datos: <a href="https://www.gbif.org" rel="noopener">GBIF</a> · iNaturalist · CC BY-NC 4.0 · Mapa: geoBoundaries, © colaboradores de <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a></span>
+    <span>Diseño y desarrollo: <a href="https://davidameth.dev">David Ameth Martínez Sánchez</a> · <a href="https://davidameth.dev/proyectos/biodiversidad/">Cómo está hecho ↗</a></span>
+  </footer>
+</div>
+<script type="module" src="/app.js"></script>
+</body>
+</html>

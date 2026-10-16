@@ -107,11 +107,22 @@ function prepararSql(sql: string, esquema: Coleccion): string {
 // para que se corrija; hasta 3 intentos, como en la app de Flask.
 async function generarYEjecutar(env: Env, pregunta: string, esquema: Coleccion, maxIntentos = 3) {
   const prompt = construirPrompt(esquema);
-  let llm = await generarSqlCascada(env, pregunta, prompt);
-  if ("error" in llm) return { llm, sql: null, resultado: null };
+  // Tiempos reales para «Ver cómo funciona» en la página.
+  const tiempos = { modelo_ms: 0, base_ms: 0 };
+  const medir = async <T>(clave: keyof typeof tiempos, f: () => Promise<T>): Promise<T> => {
+    const t0 = Date.now();
+    try {
+      return await f();
+    } finally {
+      tiempos[clave] += Date.now() - t0;
+    }
+  };
+
+  let llm = await medir("modelo_ms", () => generarSqlCascada(env, pregunta, prompt));
+  if ("error" in llm) return { llm, sql: null, resultado: null, intentos: 1, tiempos };
 
   let sql = prepararSql(llm.sql, esquema);
-  let resultado = await ejecutarSql(env, esquema, sql);
+  let resultado = await medir("base_ms", () => ejecutarSql(env, esquema, sql));
   let intento = 1;
   while ("error" in resultado && intento < maxIntentos) {
     intento += 1;
@@ -122,13 +133,13 @@ async function generarYEjecutar(env: Env, pregunta: string, esquema: Coleccion, 
       `SQL que falló:\n${sql}\n\n` +
       `Corrige el SQL para que funcione, respetando el esquema y las reglas ` +
       `del sistema. Responde ÚNICAMENTE con el SQL corregido.`;
-    const reintento = await generarSqlCascada(env, correccion, prompt);
+    const reintento = await medir("modelo_ms", () => generarSqlCascada(env, correccion, prompt));
     if ("error" in reintento) break;
     llm = reintento;
     sql = prepararSql(reintento.sql, esquema);
-    resultado = await ejecutarSql(env, esquema, sql);
+    resultado = await medir("base_ms", () => ejecutarSql(env, esquema, sql));
   }
-  return { llm, sql, resultado, intentos: intento };
+  return { llm, sql, resultado, intentos: intento, tiempos };
 }
 
 // ── Rutas ──
@@ -147,7 +158,7 @@ app.get("/explorar", async (c) => {
   if (!esquema) return c.json({ error: "Colección inválida. Usa 'amphibia' o 'aves'" }, 400);
   const q = (sql: string) => consultar(c.env.DATABASE_URL, esquema, sql);
   try {
-    const [especies, avistamientos, observadores, provincias, rango, familias, nombresProvincias, especiesTop] =
+    const [especies, avistamientos, observadores, provincias, rango, familias, nombresProvincias, especiesTop, detalle] =
       await Promise.all([
         q("SELECT COUNT(*) AS n FROM especie"),
         q("SELECT COUNT(*) AS n FROM avistamiento"),
@@ -162,6 +173,9 @@ app.get("/explorar", async (c) => {
            FROM avistamiento a JOIN especie e ON a.especie_id = e.especie_id
            GROUP BY e.nombre_cientifico, e.nombre_comun
            ORDER BY total DESC LIMIT 8`),
+        // Para pintar el mapa sin gastar cuota del modelo.
+        q(`SELECT provincia, COUNT(DISTINCT especie_id) AS especies, COUNT(*) AS avistamientos
+           FROM vista_avistamiento_completo GROUP BY provincia ORDER BY especies DESC`),
       ]);
     return c.json({
       coleccion: esquema === "anfibios" ? "amphibia" : "aves",
@@ -173,6 +187,7 @@ app.get("/explorar", async (c) => {
       familias_top: familias,
       provincias: nombresProvincias.map((r) => r.nombre),
       especies_top: especiesTop,
+      provincias_detalle: detalle,
     });
   } catch (e) {
     console.error(`Error en /explorar: ${e}`);
@@ -200,7 +215,7 @@ app.post("/consultar", async (c) => {
     return c.json({ error: MENSAJES_LIMITE[limite.motivo ?? "minuto"] }, 429);
   }
 
-  const { llm, sql, resultado, intentos } = await generarYEjecutar(c.env, pregunta, esquema);
+  const { llm, sql, resultado, intentos, tiempos } = await generarYEjecutar(c.env, pregunta, esquema);
   if (!resultado) {
     if ("ocupado" in llm && llm.ocupado) {
       c.header("Retry-After", "60");
@@ -216,6 +231,8 @@ app.post("/consultar", async (c) => {
     coleccion: esquema === "anfibios" ? "amphibia" : "aves",
     sql,
     proveedor_llm: proveedor,
+    intentos,
+    tiempos,
     ...resultado,
   });
 });

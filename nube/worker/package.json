@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "vars": "node scripts/preparar-dev-vars.mjs",
-    "dev": "wrangler dev",
+    "dev": "node scripts/dev.mjs",
     "tipos": "tsc --noEmit"
   },
   "dependencies": {
