@@ -1,0 +1,26 @@
+// Worker de la API de biodiversidad. Los secretos (GROQ_API_KEY,
+// GEMINI_API_KEY, DATABASE_URL) van en .dev.vars para `wrangler dev`
+// (npm run vars lo arma desde app/.env y nube/.env) y con
+// `wrangler secret put` al desplegar. Nunca aquí.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "biodiversidad-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  "durable_objects": {
+    "bindings": [{ "name": "LIMITE", "class_name": "LimiteDeConsultas" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["LimiteDeConsultas"] }],
+  "vars": {
+    "GROQ_MODEL": "openai/gpt-oss-20b",
+    // Respaldo, en orden. Cada modelo tiene su cuota diaria gratis aparte.
+    "GEMINI_MODELOS": "gemini-2.5-flash,gemini-3.5-flash-lite",
+    // Por persona (IP): 15 por minuto, como /consultar en app_flask.py.
+    "LIMITE_POR_MINUTO": "15",
+    "LIMITE_POR_DIA": "60",
+    // Tope de todo el sistema, por debajo de la cuota gratis de Groq.
+    "LIMITE_GLOBAL_POR_DIA": "800",
+    "ORIGENES": "https://biodiversidad.davidameth.dev,http://localhost:8787,http://127.0.0.1:8787"
+  }
+}

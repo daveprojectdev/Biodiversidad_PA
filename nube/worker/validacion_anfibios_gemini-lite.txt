@@ -1,0 +1,22 @@
+== anfibios ==
+[igual]  1. ¿Cuántas especies hay registradas? — 1 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT COUNT(*) AS total FROM anfibios.especie LIMIT 100
+[igual]  2. ¿Cuántos observadores hay? — 1 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT COUNT(*) AS total FROM anfibios.observador LIMIT 100
+[igual]  3. ¿Qué especies se vieron en Bocas del Toro? — 10 filas, todas en la referencia (limitado a 10 de 38 por el LIMIT del modelo) — gemini:gemini-3.5-flash-lite
+         SQL: SELECT DISTINCT nombre_cientifico, occurrence_url, media_type FROM anfibios.vista_avistamiento_completo WHERE provincia LIKE '%Bocas del Toro%' LIMIT 10
+[igual]  4. ¿Cuántos avistamientos hubo en 2025? — 1 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT COUNT(*) AS total FROM anfibios.avistamiento WHERE anio = 2025 LIMIT 100
+[igual]  5. ¿Cuántos registros tienen foto disponible? — 1 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT COUNT(*) AS total FROM anfibios.avistamiento WHERE media_type LIKE '%StillImage%' LIMIT 100
+[igual]  6. ¿Cuál es la especie más avistada? — 1 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT e.nombre_cientifico, COUNT(*) AS total FROM anfibios.avistamiento a JOIN anfibios.especie e ON a.especie_id = e.especie_id GROUP BY e.nombre_cientifico ORDER BY total DESC LIMIT 1
+[igual]  7. ¿Qué familia tiene más especies? — 1 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT familia, COUNT(DISTINCT especie_id) AS total FROM anfibios.vista_avistamiento_completo GROUP BY familia ORDER BY total DESC LIMIT 1
+[igual]  8. ¿En qué provincias se ha visto Oophaga pumilio? — 7 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT DISTINCT provincia FROM anfibios.vista_avistamiento_completo WHERE nombre_cientifico LIKE '%Oophaga pumilio%' AND provincia IS NOT NULL LIMIT 100
+[igual]  9. ¿Cuántos avistamientos hubo por año? — 7 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT anio, COUNT(*) AS total FROM anfibios.avistamiento GROUP BY anio ORDER BY anio DESC LIMIT 100
+[igual]  10. ¿Qué provincia tiene mayor diversidad de especies? — 1 filas — gemini:gemini-3.5-flash-lite
+         SQL: SELECT provincia, COUNT(DISTINCT especie_id) AS total_especies FROM anfibios.vista_avistamiento_completo GROUP BY provincia ORDER BY total_especies DESC LIMIT 1
+Resultado: 10 de 10 preguntas con la misma respuesta que la referencia.
