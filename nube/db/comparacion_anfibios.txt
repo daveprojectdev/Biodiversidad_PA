@@ -23,10 +23,10 @@ Comparación MySQL biodiversidad_panama contra Postgres (Neon) esquema anfibios
 [igual]   sp_registros_con_foto(): [(7776,)]
 [igual]   sp_especie_mas_avistada(): [('Rhinella horribilis', 1364)]
 [igual]   sp_familia_mas_especies(): [('Hylidae', 28)]
-[igual]   sp_provincias_por_especie('Oophaga pumilio'): 7 filas
-[igual]   sp_provincias_por_especie('rhinella'): 14 filas
 [igual]   sp_avistamientos_agrupados_por_anio(): 7 filas
 [igual]   sp_provincia_mayor_diversidad(): [('Panamá', 72)]
+[igual]   sp_provincias_por_especie('Oophaga pumilio'): 7 filas
+[igual]   sp_provincias_por_especie('rhinella'): 14 filas
 
 == 3. Batería de comprobación ==
 [igual]   Orden con más avistamientos: [('Anura', 8355)]
@@ -34,6 +34,9 @@ Comparación MySQL biodiversidad_panama contra Postgres (Neon) esquema anfibios
 [igual]   Familia con más especies: [('Hylidae', 28)]
 [igual]   Avistamientos en 2025: [(1925,)]
 [igual]   Provincia de mayor diversidad: [('Panamá', 72)]
+[igual]   Total de especies: [(135,)]
+[igual]   Total de observadores: [(2060,)]
+[igual]   Filas de la vista: [(8430,)]
 [igual]   Ranking de órdenes: [('Anura', 8355), ('Caudata', 63), ('Gymnophiona', 12)]
 [igual]   Ranking de especies: 135 filas
 [igual]   Ranking de familias: 15 filas
@@ -83,4 +86,4 @@ Comparación MySQL biodiversidad_panama contra Postgres (Neon) esquema anfibios
 [igual]   rechazado (ReadOnlySqlTransaction): CREATE TABLE prueba (x int)
 [igual]   rechazado (InsufficientPrivilege): SET TRANSACTION READ WRITE; INSERT INTO orden (nombre) VALUES ('prueba')
 
-Resultado: 69 de 69 comprobaciones iguales, 0 con diferencias.
+Resultado: 72 de 72 comprobaciones iguales, 0 con diferencias.

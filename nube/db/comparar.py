@@ -21,7 +21,7 @@ import re
 import sys
 from pathlib import Path
 
-from comun import COLECCIONES, RAIZ, TABLAS, conectar_mysql, conectar_pg
+from comun import COLECCIONES, ESPECIES_DE_PRUEBA, ESPERADOS, RAIZ, TABLAS, conectar_mysql, conectar_pg
 
 sys.stdout.reconfigure(encoding="utf-8")
 # mysql-connector avisa que stored_results() cambiará de forma; hoy funciona.
@@ -29,6 +29,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # Los procedimientos y sus argumentos de prueba (los de los ejemplos de
 # procedimientos_almacenados.sql, más casos sin acentos ni mayúsculas).
+# sp_provincias_por_especie se prueba con ESPECIES_DE_PRUEBA de cada colección.
 PROCEDIMIENTOS = [
     ("sp_total_especies", ()),
     ("sp_total_observadores", ()),
@@ -40,30 +41,26 @@ PROCEDIMIENTOS = [
     ("sp_registros_con_foto", ()),
     ("sp_especie_mas_avistada", ()),
     ("sp_familia_mas_especies", ()),
-    ("sp_provincias_por_especie", ("Oophaga pumilio",)),
-    ("sp_provincias_por_especie", ("rhinella",)),
     ("sp_avistamientos_agrupados_por_anio", ()),
     ("sp_provincia_mayor_diversidad", ()),
 ]
 
-# Batería del plan de migración: (pregunta, SQL, valor esperado).
-# El SQL es el mismo en los dos motores.
+# Batería del plan de migración: (clave, pregunta, SQL). El SQL es el
+# mismo en los dos motores; el valor esperado sale de ESPERADOS (comun.py).
 BATERIA = [
-    ("Orden con más avistamientos",
-     "SELECT orden, COUNT(*) AS total FROM vista_avistamiento_completo GROUP BY orden ORDER BY total DESC LIMIT 1",
-     [("Anura", 8355)]),
-    ("Especie más avistada",
-     "SELECT nombre_cientifico, COUNT(*) AS total FROM vista_avistamiento_completo GROUP BY nombre_cientifico ORDER BY total DESC LIMIT 1",
-     [("Rhinella horribilis", 1364)]),
-    ("Familia con más especies",
-     "SELECT f.nombre, COUNT(e.especie_id) AS cantidad FROM familia f JOIN especie e ON f.familia_id = e.familia_id GROUP BY f.nombre ORDER BY cantidad DESC LIMIT 1",
-     [("Hylidae", 28)]),
-    ("Avistamientos en 2025",
-     "SELECT COUNT(*) FROM avistamiento WHERE anio = 2025",
-     [(1925,)]),
-    ("Provincia de mayor diversidad",
-     "SELECT provincia, COUNT(DISTINCT especie_id) AS diversidad FROM vista_avistamiento_completo GROUP BY provincia ORDER BY diversidad DESC LIMIT 1",
-     [("Panamá", 72)]),
+    ("orden", "Orden con más avistamientos",
+     "SELECT orden, COUNT(*) AS total FROM vista_avistamiento_completo GROUP BY orden ORDER BY total DESC LIMIT 1"),
+    ("especie", "Especie más avistada",
+     "SELECT nombre_cientifico, COUNT(*) AS total FROM vista_avistamiento_completo GROUP BY nombre_cientifico ORDER BY total DESC LIMIT 1"),
+    ("familia", "Familia con más especies",
+     "SELECT f.nombre, COUNT(e.especie_id) AS cantidad FROM familia f JOIN especie e ON f.familia_id = e.familia_id GROUP BY f.nombre ORDER BY cantidad DESC LIMIT 1"),
+    ("anio_2025", "Avistamientos en 2025",
+     "SELECT COUNT(*) FROM avistamiento WHERE anio = 2025"),
+    ("provincia", "Provincia de mayor diversidad",
+     "SELECT provincia, COUNT(DISTINCT especie_id) AS diversidad FROM vista_avistamiento_completo GROUP BY provincia ORDER BY diversidad DESC LIMIT 1"),
+    ("total_especies", "Total de especies", "SELECT COUNT(*) FROM especie"),
+    ("total_observadores", "Total de observadores", "SELECT COUNT(*) FROM observador"),
+    ("total_vista", "Filas de la vista", "SELECT COUNT(*) FROM vista_avistamiento_completo"),
 ]
 
 # Los LIMIT 1 solo son confiables si no hay empate en el primer lugar:
@@ -219,15 +216,17 @@ def main():
         c.misma_consulta(titulo, sql)
 
     c.seccion("2. Procedimientos")
-    for proc, args in PROCEDIMIENTOS:
+    pruebas = PROCEDIMIENTOS + [("sp_provincias_por_especie", (e,)) for e in ESPECIES_DE_PRUEBA[esquema]]
+    for proc, args in pruebas:
         marcas = ", ".join(["%s"] * len(args))
         b = normalizar(pg.execute(f"SELECT * FROM {proc}({marcas})", args).fetchall())
         c.comparar(f"{proc}({', '.join(map(repr, args))})", llamar_mysql(my, proc, args), b)
 
     c.seccion("3. Batería de comprobación")
-    if esquema == "anfibios":
-        for nombre, sql, esperado in BATERIA:
-            c.misma_consulta(nombre, sql, esperado=esperado)
+    esperados = ESPERADOS[esquema]
+    for clave, nombre, sql in BATERIA:
+        esperado = esperados.get(clave)
+        c.misma_consulta(nombre + ("" if esperado else " (sin valor esperado previo)"), sql, esperado=esperado)
     for nombre, sql in RANKINGS:
         a = c.mysql(sql)
         c.comparar(nombre, a, c.postgres(sql))

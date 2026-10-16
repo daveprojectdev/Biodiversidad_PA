@@ -28,4 +28,6 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {{esquema}} TO biodiv_lector;
 ALTER ROLE biodiv_lector SET default_transaction_read_only = on;
 ALTER ROLE biodiv_lector SET statement_timeout = '10s';
 ALTER ROLE biodiv_lector SET idle_in_transaction_session_timeout = '30s';
-ALTER ROLE biodiv_lector SET search_path = {{esquema}}, public;
+-- Colección por defecto: anfibios, como en app_flask.py. Para aves,
+-- la app hace SET search_path = aves, public en cada conexión.
+ALTER ROLE biodiv_lector SET search_path = anfibios, public;

@@ -1,0 +1,89 @@
+Comparación MySQL biodiversidad_aves contra Postgres (Neon) esquema aves
+
+== 1. consultas_referencia.sql ==
+[igual]   1. SIMPLE — ¿Cuántas especies hay registradas?: [(784,)]
+[igual]   2. SIMPLE — ¿Cuántos observadores hay?: [(2498,)]
+[igual]   3. FILTRO — ¿Qué especies se vieron en Bocas del Toro?: 367 filas
+[igual]   4. FILTRO — ¿Cuántos avistamientos hubo en 2025?: [(21346,)]
+[igual]   5. FILTRO — ¿Cuántos registros tienen foto disponible?: [(46128,)]
+[igual]   6. JOIN — ¿Cuál es la especie más avistada?: [('Tyrannus melancholicus', 1047)]
+[igual]   7. JOIN — ¿Qué familia tiene más especies?: [('Tyrannidae', 80)]
+[igual]   8. JOIN — ¿En qué provincias se ha visto [ESPECIE_EJEMPLO]?: []
+[igual]   9. AGREGACIÓN — ¿Cuántos avistamientos hubo por año?: [(2024, 16703), (2025, 21346), (2026, 13712)]
+[igual]   10. AGREGACIÓN — ¿Qué provincia tiene mayor diversidad de especies?: [('Chiriquí', 495)]
+
+== 2. Procedimientos ==
+[igual]   sp_total_especies(): [(784,)]
+[igual]   sp_total_observadores(): [(2498,)]
+[igual]   sp_especies_por_provincia('Bocas'): 367 filas
+[igual]   sp_especies_por_provincia('colon'): 367 filas
+[igual]   sp_especies_por_provincia('PANAMÁ OESTE'): 386 filas
+[igual]   sp_avistamientos_por_anio(2025): [(21346,)]
+[igual]   sp_avistamientos_por_anio(1999): [(0,)]
+[igual]   sp_registros_con_foto(): [(46128,)]
+[igual]   sp_especie_mas_avistada(): [('Tyrannus melancholicus', 1047)]
+[igual]   sp_familia_mas_especies(): [('Tyrannidae', 80)]
+[igual]   sp_avistamientos_agrupados_por_anio(): [(2024, 16703), (2025, 21346), (2026, 13712)]
+[igual]   sp_provincia_mayor_diversidad(): [('Chiriquí', 495)]
+[igual]   sp_provincias_por_especie('Tyrannus melancholicus'): 13 filas
+[igual]   sp_provincias_por_especie('quiscalus'): 12 filas
+
+== 3. Batería de comprobación ==
+[igual]   Orden con más avistamientos (sin valor esperado previo): [('Passeriformes', 24357)]
+[igual]   Especie más avistada (sin valor esperado previo): [('Tyrannus melancholicus', 1047)]
+[igual]   Familia con más especies: [('Tyrannidae', 80)]
+[igual]   Avistamientos en 2025 (sin valor esperado previo): [(21346,)]
+[igual]   Provincia de mayor diversidad (sin valor esperado previo): [('Chiriquí', 495)]
+[igual]   Total de especies: [(784,)]
+[igual]   Total de observadores: [(2498,)]
+[igual]   Filas de la vista: [(51761,)]
+[igual]   Ranking de órdenes: 26 filas
+[igual]   Ranking de especies: 784 filas
+[igual]   Ranking de familias: 82 filas
+[igual]   Ranking de provincias: 13 filas
+
+== 4. Funciones ==
+[igual]   fn_temporada, meses 1 a 12 y NULL: 13 filas
+[igual]   fn_disponibilidad_multimedia, valores de prueba: 7 filas
+[igual]   fn_disponibilidad_multimedia sobre los datos: 4 filas
+[igual]   fn_temporada sobre los datos: [('Seca', 32482), ('Lluviosa', 19279)]
+[igual]   Resultado de función comparado sin mayúsculas: [(19279,)]
+
+== 5. Colación (mayúsculas y acentos) ==
+[igual]   LIKE sin acento ni mayúscula: [(9249,)]
+[igual]   = sin acento: [('Panamá',)]
+[igual]   = en mayúsculas con acento: [(1,)]
+[igual]   IN sin acentos: [('Chiriquí',), ('Coclé',), ('Darién',)]
+[igual]   Nombre común con LIKE: []
+[igual]   Orden alfabético de provincias: 13 filas
+[igual]   Orden alfabético de familias: 82 filas
+[igual]   Orden alfabético de especies: 784 filas
+[igual]   Valores con espacios al final (MySQL los ignora al comparar): [(0,)]
+
+== 6. Tablas y vista, fila por fila ==
+[igual]   conteo de orden: [(26,)]
+[igual]   contenido de orden: 26 filas
+[igual]   conteo de familia: [(82,)]
+[igual]   contenido de familia: 82 filas
+[igual]   conteo de provincia: [(13,)]
+[igual]   contenido de provincia: 13 filas
+[igual]   conteo de fuente: [(1,)]
+[igual]   contenido de fuente: [(1, 'iNaturalist', 'https://www.inaturalist.org', 'CC_BY_NC_4_0', 'Red social de ciencia ciudadana')]
+[igual]   conteo de observador: [(2498,)]
+[igual]   contenido de observador: 2498 filas
+[igual]   conteo de especie: [(784,)]
+[igual]   contenido de especie: 784 filas
+[igual]   conteo de avistamiento: [(51761,)]
+[igual]   contenido de avistamiento: 51761 filas
+[igual]   conteo de vista_avistamiento_completo: [(51761,)]
+[igual]   contenido de vista_avistamiento_completo: 51761 filas
+[igual]   columnas de la vista (nombre y orden): [('avistamiento_id', 'gbif_id', 'especie_id', 'nombre_cientifico', 'nombre_comun', 'genero', 'familia_id', 'familia', 'orden_id', 'orden', 'provincia_id', 'provincia', 'observador_id', 'observador', 'fuente_id', 'fuente', 'latitud', 'longitud', 'fecha', 'mes', 'anio', 'licencia', 'occurrence_url', 'media_type')]
+
+== 7. El rol de la app no puede escribir ==
+[igual]   rechazado (ReadOnlySqlTransaction): INSERT INTO orden (nombre) VALUES ('prueba')
+[igual]   rechazado (ReadOnlySqlTransaction): UPDATE especie SET nombre_comun = 'x' WHERE especie_id = 1
+[igual]   rechazado (ReadOnlySqlTransaction): DELETE FROM avistamiento WHERE avistamiento_id = 1
+[igual]   rechazado (ReadOnlySqlTransaction): CREATE TABLE prueba (x int)
+[igual]   rechazado (InsufficientPrivilege): SET TRANSACTION READ WRITE; INSERT INTO orden (nombre) VALUES ('prueba')
+
+Resultado: 72 de 72 comprobaciones iguales, 0 con diferencias.

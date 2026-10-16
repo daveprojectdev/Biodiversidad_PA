@@ -32,7 +32,41 @@ COLECCIONES = {
             "provincia": "Provincias y comarcas de Panama con registros de anfibios",
         },
     },
-    # "aves": {"mysql_db": "biodiversidad_aves", "comentarios": {...}},  # fase siguiente
+    # Mismas 7 tablas, vista y rutinas que anfibios. En MySQL sus ids no son
+    # AUTO_INCREMENT (importar_aves.py los pone a mano) y las tablas no tienen
+    # comentario; aquí usan la misma plantilla, con identidad, que no estorba.
+    "aves": {
+        "mysql_db": "biodiversidad_aves",
+        "comentarios": {},
+    },
+}
+
+# Valores esperados de la batería, por colección. Solo los que ya estaban
+# documentados (plan de migración y consultas_referencia.sql); None = sin
+# valor de antemano, solo se exige que los dos motores coincidan.
+ESPERADOS = {
+    "anfibios": {
+        "orden": [("Anura", 8355)],
+        "especie": [("Rhinella horribilis", 1364)],
+        "familia": [("Hylidae", 28)],
+        "anio_2025": [(1925,)],
+        "provincia": [("Panamá", 72)],
+        "total_especies": [(135,)],
+        "total_observadores": [(2060,)],
+        "total_vista": [(8430,)],
+    },
+    "aves": {
+        "familia": [("Tyrannidae", 80)],
+        "total_especies": [(784,)],
+        "total_observadores": [(2498,)],
+        "total_vista": [(51761,)],
+    },
+}
+
+# Argumentos extra para los procedimientos con especies de cada colección.
+ESPECIES_DE_PRUEBA = {
+    "anfibios": ["Oophaga pumilio", "rhinella"],
+    "aves": ["Tyrannus melancholicus", "quiscalus"],
 }
 
 

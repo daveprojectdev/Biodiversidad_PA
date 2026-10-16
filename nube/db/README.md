@@ -1,14 +1,15 @@
 # Base de datos en la nube (Neon Postgres)
 
-Fase 2 de la migración: la colección de anfibios pasa de MySQL (la versión
-local entregada) a Postgres en Neon, y una comparación automática demuestra
-que da los mismos resultados.
+Fase 2 de la migración: las dos colecciones (anfibios y aves) pasan de MySQL
+(la versión local entregada) a Postgres en Neon, y una comparación automática
+demuestra que dan los mismos resultados (72 de 72 comprobaciones en cada una).
 
 ## Dónde vive
 
 - Neon, proyecto `Biodiversidad_PA` (`long-wave-17659536`), rama `production`,
   Postgres 18, base `biodiversidad`.
-- Un esquema por colección: `anfibios` hoy, `aves` después (misma plantilla).
+- Un esquema por colección, con la misma plantilla: `anfibios` (de
+  `biodiversidad_panama`) y `aves` (de `biodiversidad_aves`).
 - Las cadenas de conexión están en `nube/.env`, que no se sube:
   - `DATABASE_URL_OWNER`: dueño de la base, solo para cargar y migrar.
   - `DATABASE_URL_LECTOR`: `biodiv_lector`, el rol de la app.
@@ -25,7 +26,7 @@ que da los mismos resultados.
 | `migrar.py` | Borra el esquema, lo recrea y copia los datos desde MySQL |
 | `comparar.py` | Corre lo mismo en los dos motores y compara fila por fila |
 | `inventario_mysql.py` | Guarda el DDL real de MySQL en `inventario_mysql/` |
-| `comparacion_anfibios.txt` | El último informe de `comparar.py` |
+| `comparacion_<coleccion>.txt` | El último informe de `comparar.py` |
 
 ## Cómo se corre
 
@@ -33,9 +34,17 @@ Desde la raíz del repo, con MySQL local encendido:
 
 ```
 pip install -r nube/db/requirements.txt
-python nube/db/migrar.py
+python nube/db/migrar.py                    # anfibios
 python nube/db/comparar.py
+python nube/db/migrar.py --coleccion aves
+python nube/db/comparar.py --coleccion aves
 ```
+
+Los valores esperados de la batería y las especies de prueba de cada
+colección están en `comun.py` (`ESPERADOS`, `ESPECIES_DE_PRUEBA`). Para aves
+solo hay esperados para lo que ya estaba documentado (784 especies, 2.498
+observadores, Tyrannidae 80, 51.761 filas en la vista); el resto se exige
+igual en los dos motores.
 
 `comparar.py` sale con código 1 si algo difiere.
 
@@ -60,11 +69,15 @@ python nube/db/comparar.py
   funciones, igual que `biodiv_app` en MySQL; sus transacciones son de solo
   lectura y cada consulta se corta a los 10 s. Se crea por SQL, no con
   `neonctl`: los roles de `neonctl` entran en `neon_superuser`. Su `search_path`
-  por defecto es `anfibios`; con aves, la app lo fijará por conexión.
+  por defecto es `anfibios`, como en la app; para aves, la app hace
+  `SET search_path = aves, public` en cada conexión.
+- **Aves en MySQL** no tiene `AUTO_INCREMENT` (los ids los pone
+  `importar_aves.py`) ni comentarios en las tablas. Aquí usa la misma plantilla
+  que anfibios, con identidad; no cambia ningún resultado.
 
 ## Inventario de MySQL
 
-`inventario_mysql/anfibios.sql` sale de `SHOW CREATE TABLE`. El cuerpo de la
+`inventario_mysql/anfibios.sql` y `aves.sql` salen de `SHOW CREATE TABLE`. El cuerpo de la
 vista y de las rutinas no se puede leer con `biodiv_app` (le faltan `SHOW VIEW`
 y `SHOW_ROUTINE`), así que se usaron los scripts con que se crearon, guardados
 en `inventario_mysql/rutinas_origen/`. La vista que corre hoy es la de
