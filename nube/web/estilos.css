@@ -9,19 +9,20 @@
   --vacio: #f1f4f5;
   --sans: 'Hanken Grotesk', system-ui, sans-serif;
   --mono: 'Fragment Mono', ui-monospace, monospace;
-  /* Color de la colección: verde para anfibios, azul para aves. */
-  --c: #0e8a57;
+  /* Color de la colección: verde para anfibios, ámbar para aves. */
+  --c: #0b7a4d; /* texto y botones: 5:1 sobre blanco; el mapa usa --c1..--c4 */
   --c1: #d4ecdf;
   --c2: #9fd4b8;
   --c3: #56b088;
   --c4: #0e8a57;
 }
+/* Ámbar, el amarillo del pecho del tirano tropical (elegido por David). */
 [data-coleccion="aves"] {
-  --c: #2459c4;
-  --c1: #d8e3f7;
-  --c2: #a7bfec;
-  --c3: #6189d9;
-  --c4: #2459c4;
+  --c: #9a5a05;
+  --c1: #fbe8c2;
+  --c2: #f2c877;
+  --c3: #de9a32;
+  --c4: #b46a06;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -106,6 +107,23 @@ h1 span { color: var(--c); }
 .tabla td.num { font-family: var(--mono); text-align: right; white-space: nowrap; }
 .tabla td.cientifico { font-style: italic; }
 .observaciones { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+/* Fotos y audios de iNaturalist (solo con licencia CC), con su crédito. */
+.galeria { margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 10px; }
+.galeria figure { display: grid; gap: 4px; align-content: start; }
+.galeria .miniatura { padding: 0; border: 0; background: var(--vacio); border-radius: 10px; overflow: hidden; cursor: zoom-in; aspect-ratio: 1; }
+.galeria .miniatura img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
+.galeria .miniatura:hover img { transform: scale(1.04); }
+.galeria .esperando { aspect-ratio: 1; border-radius: 10px; background: linear-gradient(90deg, var(--vacio), var(--fondo), var(--vacio)); background-size: 200% 100%; animation: brillo 1.4s linear infinite; }
+@keyframes brillo { to { background-position: -200% 0; } }
+.galeria audio { width: 100%; height: 36px; }
+.galeria figcaption { font: 11px/1.4 var(--mono); color: var(--gris); overflow-wrap: anywhere; }
+.galeria figcaption a { color: var(--tinta); }
+.visor { margin: auto; border: 0; border-radius: 16px; padding: 12px; max-width: min(92vw, 900px); background: var(--blanco); }
+.visor::backdrop { background: rgba(20, 23, 26, .72); }
+.visor img { display: block; max-width: 100%; max-height: 74vh; margin: 0 auto; border-radius: 10px; }
+.visor p { font: 12px/1.5 var(--mono); color: var(--gris); margin: 10px 2px; }
+.visor form { display: flex; justify-content: flex-end; }
+@media (prefers-reduced-motion: reduce) { .galeria .esperando { animation: none; } .galeria .miniatura img { transition: none; } }
 .observaciones a { font: 12px var(--mono); padding: 5px 9px; border-radius: 8px; background: var(--vacio); text-decoration: none; }
 
 details { margin-top: 14px; border-top: 1px solid var(--linea); padding-top: 10px; }

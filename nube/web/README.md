@@ -17,6 +17,14 @@ el de la versión entregada y no se toca.
 - «Ver cómo funciona» muestra el proveedor, los tiempos reales (modelo y base)
   y el SQL ejecutado.
 - Si el `LIMIT` del modelo cortó una lista (10 o más filas), la página lo dice.
+- Fotos y audios: de las observaciones de iNaturalist en la respuesta, las 6
+  primeras muestran su foto (se agranda al tocarla) o su audio, con autor y
+  licencia, vía `GET /multimedia`. Solo se muestran archivos con licencia
+  Creative Commons; los de «todos los derechos reservados» y las demás fuentes
+  (observation.org) quedan como enlace.
+- Color por colección: verde para anfibios y ámbar para aves (el amarillo del
+  tirano tropical, elegido por David). El tono del texto y los botones (`--c`)
+  cumple 5:1 sobre blanco; el mapa usa la escala `--c1` a `--c4`.
 - «Hablar» usa el dictado del navegador (Web Speech API) mientras no exista la
   voz propia (fase 4). Donde el navegador no lo tiene, el botón no aparece.
 - Mascotas, pedidas por David: con Anfibios, la rana de ojos rojos (*Agalychnis

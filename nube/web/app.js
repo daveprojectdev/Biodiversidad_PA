@@ -207,21 +207,83 @@ function tabla(filas) {
   return `<div class="tabla"><table><thead><tr>${cab}</tr></thead><tbody>${cuerpo}</tbody></table></div>`;
 }
 
+// ── Fotos y audios ──
+// Las observaciones de iNaturalist se muestran dentro de la respuesta (las 6
+// primeras, con licencia CC y su crédito, vía GET /multimedia). Las demás
+// fuentes, o los archivos sin licencia abierta, quedan como enlace.
+
+const MAX_GALERIA = 6;
+const esInat = (url) => /^https:\/\/(www\.)?inaturalist\.org\/observations\/\d+\/?$/.test(url ?? "");
+
 function observaciones(filas) {
-  const enlaces = filas.filter((f) => typeof f.occurrence_url === "string" && /^https:\/\//.test(f.occurrence_url)).slice(0, 12);
-  if (!enlaces.length) return "";
-  return (
-    '<div class="observaciones">' +
-    enlaces
-      .map((f) => {
-        const sitio = new URL(f.occurrence_url).hostname.replace(/^www\./, "");
-        const tipo = /Sound/.test(f.media_type ?? "") ? (/StillImage/.test(f.media_type) ? "foto y audio" : "audio") : "foto";
-        return `<a href="${escapar(f.occurrence_url)}" target="_blank" rel="noopener">${escapar(tipo)} · ${escapar(sitio)} ↗</a>`;
-      })
-      .join("") +
-    "</div>"
-  );
+  const conEnlace = filas.filter((f) => typeof f.occurrence_url === "string" && /^https:\/\//.test(f.occurrence_url));
+  const vistas = new Set();
+  const unicas = conEnlace.filter((f) => !vistas.has(f.occurrence_url) && vistas.add(f.occurrence_url));
+  const galeria = unicas.filter((f) => esInat(f.occurrence_url)).slice(0, MAX_GALERIA);
+  const enlaces = unicas.filter((f) => !galeria.includes(f)).slice(0, 12);
+  let html = "";
+  if (galeria.length) {
+    html +=
+      '<div class="galeria">' +
+      galeria.map((f) => `<figure data-url="${escapar(f.occurrence_url)}" data-especie="${escapar(f.nombre_cientifico ?? "")}"><div class="esperando"></div></figure>`).join("") +
+      "</div>";
+  }
+  if (enlaces.length) {
+    html +=
+      '<div class="observaciones">' +
+      enlaces
+        .map((f) => {
+          const sitio = new URL(f.occurrence_url).hostname.replace(/^www\./, "");
+          const tipo = /Sound/.test(f.media_type ?? "") ? (/StillImage/.test(f.media_type) ? "foto y audio" : "audio") : "foto";
+          return `<a href="${escapar(f.occurrence_url)}" target="_blank" rel="noopener">${escapar(tipo)} · ${escapar(sitio)} ↗</a>`;
+        })
+        .join("") +
+      "</div>";
+  }
+  return html;
 }
+
+async function llenarGaleria(caja) {
+  for (const figura of caja.querySelectorAll(".galeria figure")) {
+    const url = figura.dataset.url;
+    const enlace = `<a href="${escapar(url)}" target="_blank" rel="noopener">iNaturalist ↗</a>`;
+    let m;
+    try {
+      const r = await fetch(`/multimedia?url=${encodeURIComponent(url)}`);
+      m = r.ok ? await r.json() : null;
+    } catch {
+      m = null;
+    }
+    if (!figura.isConnected) return; // llegó otra respuesta mientras tanto
+    if (!m || (!m.fotos.length && !m.sonidos.length)) {
+      figura.innerHTML = `<figcaption>Sin foto ni audio con licencia abierta · ${enlace}</figcaption>`;
+      continue;
+    }
+    let html = "";
+    const foto = m.fotos[0];
+    if (foto) {
+      const alt = `Foto de ${figura.dataset.especie || "la observación"}, ${foto.credito}`;
+      html += `<button type="button" class="miniatura" data-grande="${escapar(foto.grande)}" data-credito="${escapar(foto.credito)}"><img src="${escapar(foto.url)}" alt="${escapar(alt)}" loading="lazy"></button>`;
+    }
+    for (const s of m.sonidos) html += `<audio controls preload="none" src="${escapar(s.url)}"></audio>`;
+    const credito = (foto ?? m.sonidos[0]).credito;
+    html += `<figcaption>${escapar(credito)} · ${enlace}</figcaption>`;
+    figura.innerHTML = html;
+  }
+}
+
+// Visor: la foto en grande, con su crédito.
+document.addEventListener("click", (ev) => {
+  const boton = ev.target.closest(".miniatura");
+  if (!boton) return;
+  $("visor-img").src = boton.dataset.grande;
+  $("visor-img").alt = boton.querySelector("img").alt;
+  $("visor-credito").textContent = boton.dataset.credito;
+  $("visor").showModal();
+});
+$("visor").addEventListener("click", (ev) => {
+  if (ev.target === $("visor")) $("visor").close(); // clic fuera de la foto
+});
 
 // "groq" -> "gpt-oss-20b (Groq)"; "gemini:gemini-3.5-flash-lite" -> "gemini-3.5-flash-lite (Google)".
 function nombreProveedor(p) {
@@ -285,6 +347,7 @@ function mostrarRespuesta(entrada) {
     cuerpo = `<p class="frase">${frase(datos, filas, colProv, colNum)}</p>${tabla(filas)}`;
   }
   caja.innerHTML = cuerpo + aviso + observaciones(filas) + comoFunciona(datos);
+  llenarGaleria(caja);
 
   if (colProv) {
     if (colNum) {

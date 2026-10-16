@@ -13,6 +13,7 @@ respuesta que la app de Flask.
 | `GET /estado` | Servidor vivo y colecciones |
 | `GET /explorar?coleccion=amphibia\|aves` | Panorama de la colección, SQL fijo, sin modelo (incluye especies y avistamientos por provincia) |
 | `POST /consultar` `{pregunta, coleccion}` | Pregunta → SQL → filas, con `tiempos` (modelo y base, en ms) e `intentos` |
+| `GET /multimedia?url=<observación de iNaturalist>` | Fotos y audios con licencia CC de esa observación, con crédito; caché de un día y 60 por minuto por persona |
 
 `coleccion` acepta `amphibia` (como el frontend entregado), `anfibios` o `aves`.
 
@@ -24,6 +25,7 @@ respuesta que la app de Flask.
 | `src/sql.ts` | Validación del SQL (solo `SELECT`), `LIMIT`, esquema delante de cada tabla, columnas de multimedia, y `ILIKE` → `LIKE` |
 | `src/llm.ts` | Cascada Groq (`openai/gpt-oss-20b`) → modelos de Gemini en orden (`GEMINI_MODELOS`), por `fetch` |
 | `src/db.ts` | Consultas a Neon por HTTP en una transacción de solo lectura |
+| `src/multimedia.ts` | Fotos y audios de iNaturalist (solo licencia CC), con caché |
 | `src/limite.ts` | Límite por persona (minuto y día) y tope diario global, con un Durable Object |
 | `src/index.ts` | Rutas, guarda de colección y autocorrección (hasta 3 intentos con el error de Postgres) |
 | `scripts/dev.mjs` | `wrangler dev` con el token de `nube/.env` en el entorno |

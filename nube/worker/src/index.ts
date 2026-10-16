@@ -15,6 +15,7 @@ import { resolverColeccion, type Coleccion } from "./colecciones";
 import { consultar, type Fila } from "./db";
 import { LimiteDeConsultas, type Veredicto } from "./limite";
 import { generarSqlCascada, type EnvLlm } from "./llm";
+import { idDeObservacion, multimediaDe } from "./multimedia";
 import { construirPrompt } from "./prompt";
 import { adaptarDialecto, asegurarColumnasMultimedia, calificarTablas, esSqlSeguro, limitarFilas } from "./sql";
 
@@ -235,6 +236,21 @@ app.post("/consultar", async (c) => {
     tiempos,
     ...resultado,
   });
+});
+
+// Fotos y audios con licencia CC de una observación de iNaturalist (ver multimedia.ts).
+app.get("/multimedia", async (c) => {
+  const id = idDeObservacion(c.req.query("url"));
+  if (!id) return c.json({ error: "Solo se aceptan observaciones de iNaturalist" }, 400);
+  const persona = c.req.header("cf-connecting-ip") ?? "local";
+  const limite = await c.env.LIMITE.getByName(`multimedia:${persona}`).consumir(60, 600);
+  if (!limite.permitido) return c.json({ error: MENSAJES_LIMITE[limite.motivo ?? "minuto"] }, 429);
+  try {
+    return c.json(await multimediaDe(id, c.executionCtx));
+  } catch (e) {
+    console.warn(`Multimedia ${id}: ${e}`);
+    return c.json({ error: "No se pudo traer la multimedia de iNaturalist" }, 502);
+  }
 });
 
 app.notFound((c) => c.json({ error: "Ruta no encontrada" }, 404));
