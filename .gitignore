@@ -1,0 +1,29 @@
+# Creado el 2026-10-03, antes del primer push al repo Biodiversidad_PA.
+# El .env.example decía que el .env «ya está en .gitignore», pero este archivo
+# no existía: el primer `git add .` habría publicado las claves de Groq y
+# Gemini y la contraseña de MySQL.
+
+# Secretos: solo se sube .env.example, nunca el real
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Registros y copias de respaldo del editor
+*.log
+*.bak*
+
+# El ejecutable de ngrok (32 MB, binario de terceros): se descarga de ngrok.com
+ngrok/
+
+# Versión en la nube (nube/): dependencias, estado local de wrangler y sus
+# secretos de desarrollo. El token de Cloudflare va en nube/.env (ignorado arriba).
+node_modules/
+.wrangler/
+.dev.vars
+.dev.vars.*

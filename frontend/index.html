@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biodiversidad de Panamá — Consultas por Voz</title>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN TOKENS — identidad visual oficial del proyecto
+   ============================================================ */
+:root {
+  --selva: #064e3b;
+  --selva-m: #059669;
+  --selva-l: #34d399;
+  --arpia: #0f0f1a;
+  --arpia-card: #1a1a28;
+  --arpia-card-2: #21212f;
+  --arpia-borde: #2a2a3d;
+  --orquidea: #7c3aed;
+  --orquidea-l: #a78bfa;
+  --orquidea-d: #5b21b6;
+  --marfil: #fdf8f0;
+  --pluma: #f0f0e8;
+  --cresta: #718096;
+  --rojo: #ef4444;
+  --amarillo: #f59e0b;
+
+  --bg: var(--arpia);
+  --bg-card: var(--arpia-card);
+  --bg-card-2: var(--arpia-card-2);
+  --borde: var(--arpia-borde);
+  --texto: var(--pluma);
+  --texto-sec: var(--cresta);
+
+  --f-display: 'Fraunces', serif;
+  --f-body: 'Plus Jakarta Sans', sans-serif;
+  --f-mono: 'JetBrains Mono', monospace;
+}
+
+[data-theme="light"] {
+  --bg: var(--marfil);
+  --bg-card: #ffffff;
+  --bg-card-2: #f7f3ea;
+  --borde: #e8e0d0;
+  --texto: #1c1c1c;
+  --texto-sec: #6b6558;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--texto);
+  font-family: var(--f-body);
+  min-height: 100vh;
+  transition: background 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 700px 500px at 15% 0%, rgba(6,78,59,0.25), transparent 60%),
+    radial-gradient(ellipse 600px 500px at 90% 30%, rgba(124,58,237,0.15), transparent 60%);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+[data-theme="light"] body::before { opacity: 0.4; }
+
+.wrap { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 0 24px; }
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+header {
+  border-bottom: 1px solid var(--borde);
+  padding: 20px 0;
+}
+.header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-mark {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--selva), var(--orquidea));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 19px; flex-shrink: 0;
+}
+.brand-text .t1 {
+  font-family: var(--f-display); font-weight: 700; font-size: 17px;
+  color: var(--texto); line-height: 1.15;
+}
+.brand-text .t2 {
+  font-size: 10px; color: var(--texto-sec); letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.header-controls { display: flex; align-items: center; gap: 10px; }
+
+.seg {
+  display: flex; background: var(--bg-card); border: 1px solid var(--borde);
+  border-radius: 10px; padding: 3px; gap: 2px;
+}
+.seg button {
+  border: none; background: transparent; color: var(--texto-sec);
+  font-family: var(--f-body); font-size: 12px; font-weight: 600;
+  padding: 7px 13px; border-radius: 7px; cursor: pointer;
+  transition: all 0.2s ease; white-space: nowrap;
+}
+.seg button.activo {
+  background: linear-gradient(135deg, var(--selva-m), var(--selva));
+  color: #fff;
+}
+
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 9px;
+  border: 1px solid var(--borde); background: var(--bg-card);
+  color: var(--texto); font-size: 15px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+.icon-btn:hover { border-color: var(--orquidea); transform: translateY(-1px); }
+
+/* ============================================================
+   HERO — la consulta es el centro de la página
+   ============================================================ */
+/* ============================================================
+   PANEL "EXPLORAR LOS DATOS"
+   ============================================================ */
+.explorar-panel {
+  display: none;
+  background: var(--bg-card);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  margin-top: 20px;
+  padding: 20px 22px;
+  animation: fadeUp 0.3s ease both;
+}
+.explorar-panel.visible { display: block; }
+.explorar-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.explorar-header h2 {
+  font-family: var(--f-display); font-size: 18px; font-weight: 600;
+  display: flex; align-items: center; gap: 10px;
+}
+.explorar-header h2 span {
+  font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 99px;
+  background: rgba(124,58,237,0.15); color: var(--orquidea-l);
+  text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--f-body);
+}
+.ex-stats {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px; margin-bottom: 20px;
+}
+.ex-stat {
+  background: var(--bg-card-2); border-radius: 10px; padding: 12px 14px;
+  border: 1px solid var(--borde);
+}
+.ex-stat .n { font-family: var(--f-display); font-size: 22px; font-weight: 700; color: var(--selva-l); }
+.ex-stat .l { font-size: 10px; color: var(--texto-sec); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 2px; }
+.ex-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 640px) { .ex-cols { grid-template-columns: 1fr; } }
+.ex-block h3 {
+  font-family: var(--f-body); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.6px; color: var(--texto-sec);
+  margin-bottom: 10px;
+}
+.ex-list { display: flex; flex-direction: column; gap: 6px; }
+.ex-row {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 13px; padding: 6px 10px; background: var(--bg-card-2); border-radius: 7px;
+}
+.ex-row .principal { color: var(--texto); }
+.ex-row .secundario { color: var(--texto-sec); font-size: 11px; font-style: italic; }
+.ex-row .num { font-family: var(--f-mono); color: var(--selva-l); font-weight: 600; flex-shrink: 0; }
+.ex-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.ex-chip {
+  font-size: 11px; padding: 5px 11px; border-radius: 99px;
+  background: var(--bg-card-2); color: var(--texto-sec); border: 1px solid var(--borde);
+}
+
+.hero { padding: 52px 0 36px; text-align: center; }
+.hero h1 {
+  font-family: var(--f-display); font-weight: 700;
+  font-size: clamp(28px, 4.5vw, 42px); line-height: 1.12;
+  margin-bottom: 12px;
+}
+.hero h1 .accent {
+  background: linear-gradient(135deg, var(--selva-l), var(--orquidea-l));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero p.sub {
+  font-size: 14px; color: var(--texto-sec); max-width: 480px;
+  margin: 0 auto 36px; line-height: 1.6;
+}
+
+/* Caja de consulta — elemento central */
+.query-box {
+  position: relative;
+  background: var(--bg-card);
+  border: 1px solid var(--borde);
+  border-radius: 20px;
+  padding: 22px;
+  max-width: 640px;
+  margin: 0 auto;
+  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.4);
+}
+[data-theme="light"] .query-box { box-shadow: 0 20px 50px -25px rgba(6,78,59,0.25); }
+
+.query-input-row { display: flex; gap: 10px; align-items: flex-end; }
+
+.query-textarea {
+  flex: 1; resize: none; border: none; background: transparent;
+  color: var(--texto); font-family: var(--f-body); font-size: 15px;
+  line-height: 1.5; padding: 8px 4px; outline: none; min-height: 26px;
+  max-height: 120px;
+}
+.query-textarea::placeholder { color: var(--texto-sec); }
+
+.mic-btn {
+  flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%;
+  border: none; cursor: pointer; position: relative;
+  background: var(--bg-card-2); color: var(--texto);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; transition: all 0.25s ease;
+}
+.mic-btn:hover { background: var(--orquidea); color: #fff; }
+.mic-btn.grabando {
+  background: var(--rojo); color: #fff;
+  animation: pulseRec 1.2s ease-in-out infinite;
+}
+@keyframes pulseRec {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+  50% { box-shadow: 0 0 0 10px rgba(239,68,68,0); }
+}
+
+.send-btn {
+  flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%;
+  border: none; cursor: pointer;
+  background: linear-gradient(135deg, var(--selva-m), var(--selva));
+  color: #fff; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s ease, opacity 0.2s ease;
+}
+.send-btn:hover { transform: scale(1.06); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+.send-btn.enviar-audio-activo {
+  background: linear-gradient(135deg, var(--orquidea), var(--orquidea-d));
+  animation: pulseSend 1.2s ease-in-out infinite;
+}
+@keyframes pulseSend {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124,58,237,0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(124,58,237,0); }
+}
+
+/* Waveform decorativo mientras graba */
+.waveform {
+  display: none; align-items: center; justify-content: center;
+  gap: 3px; height: 20px; margin-top: 12px;
+}
+.waveform.activo { display: flex; }
+.waveform span {
+  width: 3px; border-radius: 2px;
+  background: linear-gradient(180deg, var(--orquidea-l), var(--selva-l));
+  animation: wave 0.9s ease-in-out infinite;
+}
+.waveform span:nth-child(1) { height: 8px; animation-delay: 0s; }
+.waveform span:nth-child(2) { height: 16px; animation-delay: 0.1s; }
+.waveform span:nth-child(3) { height: 20px; animation-delay: 0.2s; }
+.waveform span:nth-child(4) { height: 14px; animation-delay: 0.3s; }
+.waveform span:nth-child(5) { height: 18px; animation-delay: 0.4s; }
+.waveform span:nth-child(6) { height: 10px; animation-delay: 0.5s; }
+.waveform span:nth-child(7) { height: 16px; animation-delay: 0.6s; }
+@keyframes wave {
+  0%, 100% { transform: scaleY(0.5); }
+  50% { transform: scaleY(1); }
+}
+
+.query-status {
+  font-size: 11px; color: var(--texto-sec); margin-top: 10px;
+  font-family: var(--f-mono); min-height: 14px;
+}
+
+/* Chips de ejemplo */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 20px; }
+.chip {
+  font-size: 12px; padding: 7px 14px; border-radius: 99px;
+  border: 1px solid var(--borde); background: var(--bg-card);
+  color: var(--texto-sec); cursor: pointer; transition: all 0.2s ease;
+  font-family: var(--f-body);
+}
+.chip:hover { border-color: var(--selva-l); color: var(--texto); }
+
+/* ============================================================
+   RESULTADOS
+   ============================================================ */
+.results { display: none; padding-bottom: 60px; }
+.results.visible { display: block; animation: fadeUp 0.4s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+.result-card {
+  background: var(--bg-card); border: 1px solid var(--borde);
+  border-radius: 16px; padding: 22px; margin-bottom: 16px;
+}
+
+.result-pregunta {
+  font-family: var(--f-display); font-size: 18px; font-weight: 600;
+  margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+}
+.result-pregunta .quien-badge {
+  font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: 99px;
+  background: rgba(124,58,237,0.15); color: var(--orquidea-l);
+  text-transform: uppercase; letter-spacing: 0.6px; font-family: var(--f-body);
+  flex-shrink: 0;
+}
+
+.sql-box {
+  background: var(--arpia); border: 1px solid var(--arpia-borde);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;
+  font-family: var(--f-mono); font-size: 12.5px; line-height: 1.6;
+  color: #d4d4e0; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+}
+.sql-kw { color: #7dd3fc; font-weight: 600; }
+.sql-str { color: #86efac; }
+.sql-num { color: #fbbf24; }
+
+.meta-row {
+  display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 16px;
+  font-size: 11px; color: var(--texto-sec); font-family: var(--f-mono);
+}
+.meta-row span { display: flex; align-items: center; gap: 5px; }
+.btn-escuchar {
+  margin-left: auto; display: flex; align-items: center; gap: 6px;
+  background: var(--bg-card-2); border: 1px solid var(--borde);
+  color: var(--texto); border-radius: 99px; padding: 5px 13px;
+  font-size: 11px; font-weight: 600; font-family: var(--f-body);
+  cursor: pointer; transition: border-color 0.2s ease, background 0.2s ease;
+}
+.btn-escuchar:hover:not(:disabled) { border-color: var(--orquidea); background: var(--bg-card); }
+.btn-escuchar:disabled { opacity: 0.6; cursor: default; }
+
+/* Tabla de resultados */
+.table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--borde); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead { background: var(--bg-card-2); }
+th {
+  text-align: left; padding: 10px 14px; font-family: var(--f-mono);
+  font-size: 10.5px; color: var(--texto-sec); text-transform: uppercase;
+  letter-spacing: 0.6px; border-bottom: 1px solid var(--borde);
+}
+td {
+  padding: 10px 14px; border-bottom: 1px solid var(--borde);
+  color: var(--texto); font-family: var(--f-body);
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--bg-card-2); }
+
+/* Tarjetas iNaturalist */
+.inat-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px; margin-top: 16px;
+}
+.inat-card {
+  background: var(--bg-card-2); border: 1px solid var(--borde);
+  border-radius: 12px; padding: 14px; text-decoration: none; color: var(--texto);
+  display: block; transition: transform 0.15s ease, border-color 0.2s ease;
+}
+.inat-card:hover { transform: translateY(-2px); border-color: var(--selva-l); }
+.inat-card .esp { font-family: var(--f-display); font-weight: 600; font-size: 13px; margin-bottom: 6px; font-style: italic; }
+.inat-card .meta { font-size: 11px; color: var(--texto-sec); margin-bottom: 10px; }
+.inat-card .link {
+  font-size: 11px; font-weight: 600; color: var(--orquidea-l);
+  display: flex; align-items: center; gap: 5px;
+}
+
+.audio-player-box {
+  margin-top: 16px; padding: 14px 16px; background: var(--bg-card-2);
+  border-radius: 10px; border: 1px solid var(--borde);
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.audio-player-box audio { flex: 1; height: 34px; min-width: 200px; }
+.btn-reproducir-manual {
+  display: none; align-items: center; gap: 6px;
+  background: var(--orquidea); color: #fff; border: none;
+  border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: var(--f-body); animation: pulseSend 1.2s ease-in-out infinite;
+}
+.btn-reproducir-manual.visible { display: flex; }
+
+.error-box {
+  background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 10px; padding: 14px 16px; color: #f87171; font-size: 13px;
+}
+
+.loading-box {
+  display: flex; align-items: center; gap: 10px;
+  color: var(--texto-sec); font-size: 13px; padding: 8px 0;
+}
+.spinner {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid var(--borde); border-top-color: var(--selva-l);
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   SETTINGS PANEL
+   ============================================================ */
+.settings-panel {
+  display: none; position: absolute; top: 50px; right: 24px;
+  background: var(--bg-card); border: 1px solid var(--borde);
+  border-radius: 12px; padding: 16px; width: 240px; z-index: 50;
+  box-shadow: 0 12px 40px -10px rgba(0,0,0,0.4);
+}
+.settings-panel.visible { display: block; }
+.settings-panel label {
+  font-size: 10px; color: var(--texto-sec); text-transform: uppercase;
+  letter-spacing: 0.6px; display: block; margin-bottom: 6px;
+}
+.settings-panel input {
+  width: 100%; padding: 8px 10px; border-radius: 7px;
+  border: 1px solid var(--borde); background: var(--bg); color: var(--texto);
+  font-family: var(--f-mono); font-size: 12px; margin-bottom: 10px;
+}
+.settings-panel button {
+  width: 100%; padding: 8px; border-radius: 7px; border: none;
+  background: var(--selva-m); color: #fff; font-weight: 600;
+  font-size: 12px; cursor: pointer;
+}
+
+footer {
+  border-top: 1px solid var(--borde); padding: 20px 0 40px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 10px; font-size: 11px; color: var(--texto-sec);
+}
+footer .f-mono { font-family: var(--f-mono); }
+
+@media (max-width: 600px) {
+  .header-row { flex-direction: column; align-items: stretch; }
+  .header-controls { justify-content: space-between; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="header-row">
+      <div class="brand">
+        <div class="brand-mark">🌿</div>
+        <div class="brand-text">
+          <div class="t1">Biodiversidad de Panamá</div>
+          <div class="t2">Consultas por voz · Base de Datos</div>
+        </div>
+      </div>
+      <div class="header-controls">
+        <div class="seg" id="segColeccion">
+          <button data-coleccion="amphibia" class="activo">🐸 Anfibios</button>
+          <button data-coleccion="aves">🦅 Aves</button>
+        </div>
+        <button class="icon-btn" id="btnExplorar" title="Explorar los datos">📊</button>
+        <button class="icon-btn" id="btnTheme" title="Cambiar tema">🌙</button>
+        <button class="icon-btn" id="btnSettings" title="Configuración">⚙</button>
+      </div>
+    </div>
+    <div class="settings-panel" id="settingsPanel">
+      <label for="tokenInput">Token de acceso (demo)</label>
+      <input type="text" id="tokenInput" placeholder="Escribe el token de la demo">
+      <button id="btnGuardarToken">Guardar</button>
+    </div>
+  </header>
+
+  <section class="explorar-panel" id="explorarPanel">
+    <div class="explorar-header">
+      <h2>Explorar los datos <span id="explorarColeccionBadge"></span></h2>
+      <button class="icon-btn" id="btnCerrarExplorar" title="Cerrar">✕</button>
+    </div>
+    <div id="explorarContenido">
+      <div class="loading-box"><div class="spinner"></div> Cargando resumen…</div>
+    </div>
+  </section>
+
+  <section class="hero">
+    <h1>Pregúntale a la <span class="accent">selva</span> de Panamá</h1>
+    <p class="sub">Habla o escribe en español. El sistema traduce tu pregunta a SQL, consulta la base de datos real de GBIF y te responde con voz.</p>
+
+    <div class="query-box">
+      <div class="query-input-row">
+        <textarea id="queryInput" class="query-textarea" rows="1"
+          placeholder="¿Cuál es la especie más avistada en Panamá?"></textarea>
+        <button class="mic-btn" id="btnMic" title="Hablar">🎤</button>
+        <button class="send-btn" id="btnEnviar" title="Enviar">➤</button>
+      </div>
+      <div class="waveform" id="waveform">
+        <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="query-status" id="queryStatus"></div>
+    </div>
+
+    <div class="chips" id="chips">
+      <div class="chip" data-q="¿Cuántas especies hay registradas?">Cuántas especies hay</div>
+      <div class="chip" data-q="¿Cuál es la especie más avistada?">Especie más avistada</div>
+      <div class="chip" data-q="¿Qué familia tiene más especies?">Familia con más especies</div>
+      <div class="chip" data-q="¿Cuántos avistamientos hubo por año?">Avistamientos por año</div>
+    </div>
+  </section>
+
+  <section class="results" id="resultsSection"></section>
+
+  <footer>
+    <div class="f-mono">GBIF CC BY-NC 4.0 · Panamá · 2020–2026</div>
+    <div>David Ameth Martínez Sánchez · Emanuel Quintero · Prof. Rafael Vejarano</div>
+  </footer>
+
+</div>
+
+<script>
+// ============================================================
+// ESTADO Y CONFIGURACIÓN
+// ============================================================
+const API_BASE = '';  // mismo origen — Flask sirve este archivo también
+let coleccionActual = 'amphibia';
+let demoToken = localStorage.getItem('demoToken') || '';
+let grabando = false;
+let mediaRecorder = null;
+let audioChunks = [];
+
+document.getElementById('tokenInput').value = demoToken;
+
+// ============================================================
+// TEMA CLARO / OSCURO
+// ============================================================
+const btnTheme = document.getElementById('btnTheme');
+function aplicarTema(tema) {
+  document.documentElement.setAttribute('data-theme', tema);
+  btnTheme.textContent = tema === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('tema', tema);
+}
+aplicarTema(localStorage.getItem('tema') || 'dark');
+btnTheme.addEventListener('click', () => {
+  const actual = document.documentElement.getAttribute('data-theme');
+  aplicarTema(actual === 'dark' ? 'light' : 'dark');
+});
+
+// ============================================================
+// SETTINGS PANEL
+// ============================================================
+const settingsPanel = document.getElementById('settingsPanel');
+document.getElementById('btnSettings').addEventListener('click', () => {
+  settingsPanel.classList.toggle('visible');
+});
+document.getElementById('btnGuardarToken').addEventListener('click', () => {
+  const val = document.getElementById('tokenInput').value.trim();
+  if (val) {
+    demoToken = val;
+    localStorage.setItem('demoToken', val);
+  }
+  settingsPanel.classList.remove('visible');
+});
+
+// ============================================================
+// SELECTOR DE COLECCIÓN
+// ============================================================
+document.getElementById('segColeccion').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if (!btn) return;
+  document.querySelectorAll('#segColeccion button').forEach(b => b.classList.remove('activo'));
+  btn.classList.add('activo');
+  coleccionActual = btn.dataset.coleccion;
+  if (explorarPanel.classList.contains('visible')) cargarExplorar();
+});
+
+// ============================================================
+// PANEL "EXPLORAR LOS DATOS"
+// ============================================================
+const explorarPanel = document.getElementById('explorarPanel');
+const explorarContenido = document.getElementById('explorarContenido');
+const explorarBadge = document.getElementById('explorarColeccionBadge');
+
+document.getElementById('btnExplorar').addEventListener('click', () => {
+  const abrir = !explorarPanel.classList.contains('visible');
+  explorarPanel.classList.toggle('visible', abrir);
+  if (abrir) cargarExplorar();
+});
+document.getElementById('btnCerrarExplorar').addEventListener('click', () => {
+  explorarPanel.classList.remove('visible');
+});
+
+async function cargarExplorar() {
+  explorarBadge.textContent = coleccionActual === 'amphibia' ? '🐸 anfibios' : '🦅 aves';
+  explorarContenido.innerHTML = '<div class="loading-box"><div class="spinner"></div> Cargando resumen…</div>';
+
+  try {
+    const resp = await fetch(`${API_BASE}/explorar?coleccion=${coleccionActual}`, {
+      headers: { 'X-Demo-Token': demoToken },
+    });
+    const data = await resp.json();
+
+    if (data.error) {
+      explorarContenido.innerHTML = `<div class="error-box">⚠ ${escapeHtml(data.error)}</div>`;
+      return;
+    }
+
+    const familiasHtml = data.familias_top.map(f =>
+      `<div class="ex-row"><span class="principal">${escapeHtml(f.familia)}</span><span class="num">${f.especies}</span></div>`
+    ).join('');
+
+    const especiesHtml = data.especies_top.map(e => {
+      const comun = e.nombre_comun ? `<span class="secundario"> · ${escapeHtml(e.nombre_comun)}</span>` : '';
+      return `<div class="ex-row"><span class="principal">${escapeHtml(e.nombre_cientifico)}${comun}</span><span class="num">${e.total}</span></div>`;
+    }).join('');
+
+    const provinciasHtml = data.provincias.map(p => `<span class="ex-chip">${escapeHtml(p)}</span>`).join('');
+
+    explorarContenido.innerHTML = `
+      <div class="ex-stats">
+        <div class="ex-stat"><div class="n">${data.total_especies}</div><div class="l">Especies</div></div>
+        <div class="ex-stat"><div class="n">${data.total_avistamientos.toLocaleString()}</div><div class="l">Avistamientos</div></div>
+        <div class="ex-stat"><div class="n">${data.total_observadores.toLocaleString()}</div><div class="l">Observadores</div></div>
+        <div class="ex-stat"><div class="n">${data.total_provincias}</div><div class="l">Provincias</div></div>
+        <div class="ex-stat"><div class="n">${data.rango_anios}</div><div class="l">Rango de años</div></div>
+      </div>
+      <div class="ex-cols">
+        <div class="ex-block">
+          <h3>Familias con más especies</h3>
+          <div class="ex-list">${familiasHtml}</div>
+        </div>
+        <div class="ex-block">
+          <h3>Especies más avistadas</h3>
+          <div class="ex-list">${especiesHtml}</div>
+        </div>
+      </div>
+      <div class="ex-block" style="margin-top:16px;">
+        <h3>Provincias en los datos</h3>
+        <div class="ex-chips">${provinciasHtml}</div>
+      </div>
+    `;
+  } catch (err) {
+    explorarContenido.innerHTML = `<div class="error-box">⚠ No se pudo cargar el resumen.</div>`;
+  }
+}
+
+// ============================================================
+// CHIPS DE EJEMPLO
+// ============================================================
+document.getElementById('chips').addEventListener('click', (e) => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.getElementById('queryInput').value = chip.dataset.q;
+  enviarConsulta(chip.dataset.q);
+});
+
+// ============================================================
+// AUTO-RESIZE DEL TEXTAREA
+// ============================================================
+const queryInput = document.getElementById('queryInput');
+queryInput.addEventListener('input', () => {
+  queryInput.style.height = 'auto';
+  queryInput.style.height = Math.min(queryInput.scrollHeight, 120) + 'px';
+});
+queryInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    enviarConsulta(queryInput.value.trim());
+  }
+});
+
+// ============================================================
+// ENVÍO — el botón de flecha sirve para texto Y para
+// detener+enviar una grabación en curso (nunca hace nada "vacío")
+// ============================================================
+document.getElementById('btnEnviar').addEventListener('click', () => {
+  if (grabando) {
+    detenerGrabacionYEnviar();
+  } else {
+    enviarConsulta(queryInput.value.trim());
+  }
+});
+
+async function enviarConsulta(pregunta) {
+  if (!pregunta) return;
+
+  const resultsSection = document.getElementById('resultsSection');
+  resultsSection.classList.add('visible');
+
+  const idBloque = 'r' + Date.now();
+  const bloque = document.createElement('div');
+  bloque.className = 'result-card';
+  bloque.id = idBloque;
+  bloque.innerHTML = `
+    <div class="result-pregunta">
+      <span>${escapeHtml(pregunta)}</span>
+      <span class="quien-badge">${coleccionActual === 'amphibia' ? '🐸 anfibios' : '🦅 aves'}</span>
+    </div>
+    <div class="loading-box"><div class="spinner"></div> Generando SQL y consultando MySQL…</div>
+  `;
+  resultsSection.prepend(bloque);
+  queryInput.value = '';
+  queryInput.style.height = 'auto';
+
+  try {
+    const bodyTexto = JSON.stringify({ pregunta, coleccion: coleccionActual });
+    const resp = await fetch(`${API_BASE}/consultar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Demo-Token': demoToken,
+      },
+      body: bodyTexto,
+    });
+    const data = await resp.json();
+    renderResultado(bloque, data, null);
+  } catch (err) {
+    renderError(bloque, 'No se pudo conectar con el servidor. ¿Está corriendo app_flask.py?');
+  }
+}
+
+// ============================================================
+// GRABACIÓN DE VOZ — MediaRecorder -> /audio
+//
+// Mientras se está grabando, los dos botones cambian de función:
+//   🎤 -> ✕  (cancela la grabación, no manda nada)
+//   ➤  -> se mantiene, pero ahora detiene la grabación Y la envía
+// Así nunca hay un botón que "no hace nada" — cada uno tiene
+// siempre una sola acción clara.
+// ============================================================
+const btnMic = document.getElementById('btnMic');
+const btnEnviarEl = document.getElementById('btnEnviar');
+const waveform = document.getElementById('waveform');
+const queryStatus = document.getElementById('queryStatus');
+let debeEnviarGrabacion = true;
+let tiempoInicioGrabacion = null;
+let timerGrabacion = null;
+let audioDesbloqueado = false;
+
+// Reproducir (y pausar de inmediato) un audio silencioso durante el
+// primer toque real del usuario "desbloquea" el autoplay con sonido
+// para el resto de la sesión en la mayoría de navegadores móviles.
+function desbloquearAudio() {
+  if (audioDesbloqueado) return;
+  audioDesbloqueado = true;
+  try {
+    const silencio = new Audio(
+      'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAAABmYWN0BAAAAAAAAABkYXRhAAAAAA=='
+    );
+    silencio.play().catch(() => {});
+  } catch (e) { /* silencioso a propósito */ }
+}
+
+btnMic.addEventListener('click', async () => {
+  if (!grabando) {
+    await iniciarGrabacion();
+  } else {
+    cancelarGrabacion();
+  }
+});
+
+async function iniciarGrabacion() {
+  desbloquearAudio();
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    audioChunks = [];
+    debeEnviarGrabacion = true;
+
+    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      if (debeEnviarGrabacion && audioChunks.length > 0) {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        enviarAudio(audioBlob);
+      }
+    };
+
+    mediaRecorder.start();
+    grabando = true;
+    actualizarUIGrabacion(true);
+  } catch (err) {
+    queryStatus.textContent = 'No se pudo acceder al micrófono. Revisa los permisos del navegador.';
+  }
+}
+
+function detenerGrabacionYEnviar() {
+  debeEnviarGrabacion = true;
+  pararMediaRecorder();
+  queryStatus.textContent = 'Procesando audio…';
+}
+
+function cancelarGrabacion() {
+  debeEnviarGrabacion = false;
+  pararMediaRecorder();
+  queryStatus.textContent = 'Grabación cancelada — no se envió nada.';
+  setTimeout(() => {
+    if (queryStatus.textContent === 'Grabación cancelada — no se envió nada.') {
+      queryStatus.textContent = '';
+    }
+  }, 2500);
+}
+
+function pararMediaRecorder() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stop();
+  }
+  grabando = false;
+  actualizarUIGrabacion(false);
+}
+
+function actualizarUIGrabacion(activo) {
+  if (activo) {
+    btnMic.classList.add('grabando');
+    btnMic.textContent = '✕';
+    btnMic.title = 'Cancelar grabación (no se envía nada)';
+    btnEnviarEl.classList.add('enviar-audio-activo');
+    btnEnviarEl.title = 'Detener y enviar la grabación';
+    waveform.classList.add('activo');
+    queryStatus.textContent = '🔴 Grabando… ➤ para enviar, ✕ para cancelar';
+
+    tiempoInicioGrabacion = Date.now();
+    timerGrabacion = setInterval(() => {
+      const seg = Math.floor((Date.now() - tiempoInicioGrabacion) / 1000);
+      const mm = String(Math.floor(seg / 60)).padStart(2, '0');
+      const ss = String(seg % 60).padStart(2, '0');
+      queryStatus.textContent = `🔴 Grabando ${mm}:${ss}… ➤ para enviar, ✕ para cancelar`;
+    }, 500);
+  } else {
+    btnMic.classList.remove('grabando');
+    btnMic.textContent = '🎤';
+    btnMic.title = 'Hablar';
+    btnEnviarEl.classList.remove('enviar-audio-activo');
+    btnEnviarEl.title = 'Enviar';
+    waveform.classList.remove('activo');
+    clearInterval(timerGrabacion);
+  }
+}
+
+async function enviarAudio(blob) {
+  const resultsSection = document.getElementById('resultsSection');
+  resultsSection.classList.add('visible');
+
+  const bloque = document.createElement('div');
+  bloque.className = 'result-card';
+  bloque.innerHTML = `
+    <div class="result-pregunta">
+      <span>🎙️ Pregunta por voz</span>
+      <span class="quien-badge">${coleccionActual === 'amphibia' ? '🐸 anfibios' : '🦅 aves'}</span>
+    </div>
+    <div class="loading-box"><div class="spinner"></div> Transcribiendo con faster-whisper…</div>
+  `;
+  resultsSection.prepend(bloque);
+
+  try {
+    const formData = new FormData();
+    formData.append('audio', blob, 'grabacion.webm');
+    formData.append('coleccion', coleccionActual);
+
+    const resp = await fetch(`${API_BASE}/audio`, {
+      method: 'POST',
+      headers: { 'X-Demo-Token': demoToken },
+      body: formData,
+    });
+    const data = await resp.json();
+    renderResultado(bloque, data, data.pregunta_transcrita);
+    queryStatus.textContent = '';
+  } catch (err) {
+    renderError(bloque, 'No se pudo procesar el audio.');
+    queryStatus.textContent = '';
+  }
+}
+
+// ============================================================
+// RENDERIZADO DE RESULTADOS
+// ============================================================
+function renderResultado(bloque, data, preguntaTranscrita) {
+  // Mostrar la pregunta transcrita SIEMPRE, incluso si lo que sigue
+  // falla — si no, no hay forma de saber si el problema fue la
+  // transcripción de voz o el SQL generado.
+  if (preguntaTranscrita) {
+    const span = bloque.querySelector('.result-pregunta span');
+    span.textContent = preguntaTranscrita;
+  }
+
+  if (data.error) {
+    // Si el error viene con un SQL que sí se generó (por ejemplo,
+    // MySQL lo rechazó por una columna o relación inválida), mostrarlo
+    // también — ayuda muchísimo a diagnosticar qué generó el LLM.
+    if (data.sql) {
+      const sqlBox = document.createElement('div');
+      sqlBox.className = 'sql-box';
+      sqlBox.innerHTML = resaltarSQL(data.sql);
+      const loadingBox = bloque.querySelector('.loading-box');
+      if (loadingBox) loadingBox.replaceWith(sqlBox);
+      bloque.insertAdjacentHTML('beforeend', `<div class="error-box">⚠ ${escapeHtml(data.error)}</div>`);
+    } else {
+      renderError(bloque, data.error);
+    }
+    return;
+  }
+
+  let html = '';
+
+  if (data.sql) {
+    html += `<div class="sql-box">${resaltarSQL(data.sql_ejecutado || data.sql)}</div>`;
+  }
+
+  html += `<div class="meta-row">
+    <span>⚙ ${data.proveedor_llm || '—'}</span>
+    <span>📊 ${data.total ?? 0} resultado(s)</span>
+    ${!data.respuesta_audio_url ? '<button class="btn-escuchar">🔊 Escuchar respuesta</button>' : ''}
+  </div>`;
+
+  if (data.filas && data.filas.length > 0) {
+    html += renderTabla(data.filas);
+    html += renderTarjetasINat(data.filas);
+  } else {
+    html += `<div class="loading-box">Sin resultados para esta consulta.</div>`;
+  }
+
+  if (data.respuesta_audio_url) {
+    html += `<div class="audio-player-box">
+      <span>🔊</span>
+      <audio controls src="${API_BASE}${data.respuesta_audio_url}"></audio>
+      <button class="btn-reproducir-manual">▶ Reproducir respuesta</button>
+    </div>`;
+  }
+
+  const loadingBox = bloque.querySelector('.loading-box');
+  if (loadingBox) loadingBox.remove();
+  bloque.insertAdjacentHTML('beforeend', html);
+
+  // Botón "Escuchar respuesta" — solo aparece en resultados de texto.
+  // No vuelve a consultar MySQL ni al LLM, solo sintetiza voz a partir
+  // de las filas que ya están en pantalla.
+  const btnEscuchar = bloque.querySelector('.btn-escuchar');
+  if (btnEscuchar) {
+    btnEscuchar.addEventListener('click', async () => {
+      btnEscuchar.disabled = true;
+      btnEscuchar.textContent = '⏳ Generando audio…';
+      try {
+        const resp = await fetch(`${API_BASE}/hablar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Demo-Token': demoToken },
+          body: JSON.stringify({ filas: data.filas || [] }),
+        });
+        const resHablar = await resp.json();
+        if (resHablar.error || !resHablar.respuesta_audio_url) {
+          btnEscuchar.textContent = '⚠ No se pudo generar audio';
+          return;
+        }
+
+        const audioBox = document.createElement('div');
+        audioBox.className = 'audio-player-box';
+        audioBox.innerHTML = `
+          <span>🔊</span>
+          <audio controls src="${API_BASE}${resHablar.respuesta_audio_url}"></audio>
+          <button class="btn-reproducir-manual">▶ Reproducir respuesta</button>
+        `;
+        btnEscuchar.replaceWith(audioBox);
+
+        const audioEl = audioBox.querySelector('audio');
+        const btnManual = audioBox.querySelector('.btn-reproducir-manual');
+        const intento = audioEl.play();
+        if (intento !== undefined) {
+          intento.then(() => btnManual.classList.remove('visible'))
+                 .catch(() => btnManual.classList.add('visible'));
+        }
+        btnManual.addEventListener('click', () => {
+          audioEl.play();
+          btnManual.classList.remove('visible');
+        });
+      } catch (err) {
+        btnEscuchar.disabled = false;
+        btnEscuchar.textContent = '⚠ Error, toca para reintentar';
+      }
+    });
+  }
+
+  // El autoplay con sonido está bloqueado por defecto en navegadores
+  // móviles (iOS Safari, Chrome Android) cuando el audio se inserta
+  // después de una respuesta asíncrona. Intentamos reproducir de
+  // todas formas; si el navegador lo bloquea, mostramos un botón
+  // manual — garantizado que funciona en cualquier dispositivo.
+  if (data.respuesta_audio_url) {
+    const audioEl = bloque.querySelector('.audio-player-box audio');
+    const btnManual = bloque.querySelector('.btn-reproducir-manual');
+    const intento = audioEl.play();
+    if (intento !== undefined) {
+      intento.then(() => {
+        btnManual.classList.remove('visible');
+      }).catch(() => {
+        btnManual.classList.add('visible');
+      });
+    }
+    btnManual.addEventListener('click', () => {
+      audioEl.play();
+      btnManual.classList.remove('visible');
+    });
+  }
+}
+
+function renderError(bloque, mensaje) {
+  const loadingBox = bloque.querySelector('.loading-box');
+  if (loadingBox) loadingBox.remove();
+  bloque.insertAdjacentHTML('beforeend', `<div class="error-box">⚠ ${escapeHtml(mensaje)}</div>`);
+}
+
+function renderTabla(filas) {
+  // occurrence_url y media_type no se muestran en la tabla — ya se
+  // ven en las tarjetas de iNaturalist justo debajo, y una URL cruda
+  // en una celda solo ensucia la tabla.
+  const columnasOcultas = ['occurrence_url', 'media_type'];
+  const columnas = Object.keys(filas[0]).filter(c => !columnasOcultas.includes(c));
+  let html = '<div class="table-wrap"><table><thead><tr>';
+  columnas.forEach(c => html += `<th>${escapeHtml(c)}</th>`);
+  html += '</tr></thead><tbody>';
+  filas.forEach(fila => {
+    html += '<tr>';
+    columnas.forEach(c => {
+      let val = fila[c];
+      if (val === null || val === undefined) val = '—';
+      html += `<td>${escapeHtml(String(val))}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  return html;
+}
+
+function renderTarjetasINat(filas) {
+  const conFoto = filas.filter(f => f.occurrence_url);
+  if (conFoto.length === 0) return '';
+
+  let html = '<div class="inat-grid">';
+  conFoto.slice(0, 12).forEach(f => {
+    const especie = f.nombre_cientifico || f.especie || 'Observación';
+    const provincia = f.provincia || f.nombre || '';
+    const fecha = f.fecha || '';
+    const media = f.media_type || '';
+    let icono = '📷';
+    if (media.includes('Sound') && media.includes('StillImage')) icono = '📷🎵';
+    else if (media.includes('Sound')) icono = '🎵';
+
+    html += `<a class="inat-card" href="${escapeAttr(f.occurrence_url)}" target="_blank" rel="noopener">
+      <div class="esp">${escapeHtml(especie)}</div>
+      <div class="meta">${icono} ${escapeHtml(provincia)} ${fecha ? '· ' + escapeHtml(fecha) : ''}</div>
+      <div class="link">Ver en iNaturalist ↗</div>
+    </a>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+function resaltarSQL(sql) {
+  let s = escapeHtml(sql);
+  const keywords = ['SELECT','FROM','WHERE','JOIN','ON','GROUP BY','ORDER BY','LIMIT','AS','AND','OR','COUNT','DISTINCT','LIKE','DESC','ASC','IN'];
+  keywords.forEach(kw => {
+    const re = new RegExp(`\\b${kw}\\b`, 'gi');
+    s = s.replace(re, `<span class="sql-kw">${kw}</span>`);
+  });
+  s = s.replace(/'([^']*)'/g, `<span class="sql-str">'$1'</span>`);
+  s = s.replace(/\b(\d+)\b/g, `<span class="sql-num">$1</span>`);
+  return s;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+function escapeAttr(str) {
+  return String(str).replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
