@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#0e8a57"/><circle cx="16" cy="16" r="6" fill="#f7f6f1"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- La cara de la rana de ojos rojos del Atlas (elegido por David el 2026-10-16).
+       nube/worker/scripts/iconos.py dibuja lo mismo en PNG. -->
+  <ellipse cx="16" cy="20" rx="14.5" ry="10.5" fill="#4fbf5e" />
+  <circle cx="8.6" cy="10.4" r="6.6" fill="#4fbf5e" />
+  <circle cx="23.4" cy="10.4" r="6.6" fill="#4fbf5e" />
+  <circle cx="8.6" cy="10.4" r="4.7" fill="#e3262f" />
+  <circle cx="23.4" cy="10.4" r="4.7" fill="#e3262f" />
+  <ellipse cx="8.6" cy="10.4" rx="1.3" ry="3.4" fill="#111111" />
+  <ellipse cx="23.4" cy="10.4" rx="1.3" ry="3.4" fill="#111111" />
+  <path d="M9.5 21.5 Q16 26.5 22.5 21.5" fill="none" stroke="#23602f" stroke-width="2" stroke-linecap="round" />
+</svg>

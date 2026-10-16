@@ -41,6 +41,14 @@ el de la versión entregada y no se toca.
   un contorno claro para no perderse en el mar. Todo el texto pasa de 7:1.
 - Sin dependencias ni paso de compilación: `index.html`, `estilos.css`, `app.js`, `tema.js`.
 
+## Íconos y citas
+
+- `favicon.svg` es la cara de la rana de ojos rojos (elegida por David);
+  `favicon-32.png` y `apple-touch-icon.png` salen de
+  `nube/worker/scripts/iconos.py` con el mismo dibujo.
+- El pie cita los dos DOI de GBIF (anfibios `10.15468/dl.zcy9ys`, aves
+  `10.15468/dl.qpx3vw`); la cita completa está en el README de la raíz.
+
 ## El mapa
 
 `mapa-panama.svg` (37 KB, 13 provincias y comarcas) se genera con
