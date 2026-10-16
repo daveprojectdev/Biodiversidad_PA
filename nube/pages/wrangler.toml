@@ -1,0 +1,11 @@
+# Cloudflare Pages: sirve nube/web en biodiversidad.davidameth.dev (CNAME
+# desde Spaceship; davidameth.dev no está en Cloudflare, así que un Worker no
+# puede tener ese dominio, pero Pages sí). Las rutas de la API pasan al Worker
+# biodiversidad-api por un service binding: misma dirección, sin CORS.
+name = "biodiversidad"
+pages_build_output_dir = "../web"
+compatibility_date = "2026-10-01"
+
+[[services]]
+binding = "API"
+service = "biodiversidad-api"

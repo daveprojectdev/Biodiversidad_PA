@@ -1,0 +1,8 @@
+# Atlas vivo · Biodiversidad de Panamá
+User-agent: *
+Allow: /
+# Las rutas de la API gastan cuota del modelo o de iNaturalist: no se rastrean.
+Disallow: /consultar
+Disallow: /multimedia
+Disallow: /explorar
+Disallow: /estado

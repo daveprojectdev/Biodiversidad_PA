@@ -12,6 +12,10 @@
   // en las rutas de Hono (/estado, /explorar, /consultar).
   "assets": { "directory": "../web", "not_found_handling": "none" },
   "observability": { "enabled": true },
+  // Sin dirección pública propia: solo lo llama Pages (nube/pages) por el
+  // service binding. La página la sirve Pages en biodiversidad.davidameth.dev.
+  "workers_dev": false,
+  "preview_urls": false,
   "durable_objects": {
     "bindings": [{ "name": "LIMITE", "class_name": "LimiteDeConsultas" }]
   },
