@@ -19,14 +19,14 @@ el de la versión entregada y no se toca.
 - Si el `LIMIT` del modelo cortó una lista (10 o más filas), la página lo dice.
 - «Hablar» usa el dictado del navegador (Web Speech API) mientras no exista la
   voz propia (fase 4). Donde el navegador no lo tiene, el botón no aparece.
-- Mascotas, pedidas por David: con Anfibios, la rana dorada (*Atelopus
-  zeteki*, símbolo de Panamá) en su nenúfar; con Aves, un tirano tropical
-  (*Tyrannus melancholicus*, el ave más avistada) en una rama. Flotan en el
-  Pacífico del mapa. La rana da un saltito y saluda con la mano cada 8 s (la
-  rana dorada es famosa por «hacer señas»); el ave salta de la rama, aletea y
-  vuela un poco cada 9 s. Con un clic, la rana da un salto grande y el ave un
-  vuelo corto. Son SVG en `index.html`, animadas solo con transform y opacity,
-  y se quedan quietas con «reducir movimiento».
+- Mascotas, pedidas por David: con Anfibios, la rana de ojos rojos (*Agalychnis
+  callidryas*) en su nenúfar (se probó la rana dorada y David prefirió esta);
+  con Aves, un tirano tropical (*Tyrannus melancholicus*, el ave más avistada),
+  erguido y esbelto, en una rama. Flotan en el Pacífico del mapa. La rana da un
+  saltito cada 8 s y croa; el ave salta de la rama, aletea y vuela un poco cada
+  9 s. Con un clic, la rana da un salto grande y el ave un vuelo corto. Son SVG
+  en `index.html`, animadas solo con transform y opacity, y se quedan quietas
+  con «reducir movimiento».
 - Sin dependencias ni paso de compilación: `index.html`, `estilos.css`, `app.js`.
 
 ## El mapa

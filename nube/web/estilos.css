@@ -129,7 +129,7 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
   .mapa text { font-size: 30px; stroke-width: 6px; }
 }
 
-/* ── Mascotas: rana dorada (anfibios) y tirano tropical (aves) ──
+/* ── Mascotas: rana de ojos rojos (anfibios) y tirano tropical (aves) ──
    Flotan en el Pacífico del mapa. Solo se anima transform y opacity. */
 .mapa-envoltura { position: relative; }
 .mascota { position: absolute; left: 46%; bottom: -5%; width: 25%; min-width: 104px; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; animation: entrar .7s cubic-bezier(.2, .9, .3, 1.3) both; }
@@ -138,11 +138,11 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
 @keyframes entrar { from { opacity: 0; transform: translateY(18px) scale(.7); } to { opacity: 1; transform: none; } }
 /* Solo las piezas animadas giran sobre su propia caja; las demás conservan
    las rotaciones escritas en el SVG. */
-.rana .ondas ellipse, .rana .flota, .rana .parpado, .rana .cuerpo-rana,
+.rana .ondas ellipse, .rana .flota, .rana .parpado, .rana .cuerpo-rana, .rana .garganta,
 .ave .rama, .ave .cola, .ave .parpado-ave, .ave .cabeza-ave, .ave .pajaro { transform-box: fill-box; }
 @keyframes parpadeo { 0%, 93%, 100% { transform: scaleY(0); } 96% { transform: scaleY(1); } }
 
-/* Rana dorada */
+/* Rana de ojos rojos (volvió a pedido de David, con saltito cada 8 s) */
 .rana .ondas ellipse { fill: none; stroke: rgba(255, 255, 255, .9); stroke-width: 2; transform-origin: center; animation: onda 3.6s ease-out infinite; }
 .rana .ondas ellipse:nth-child(2) { animation-delay: 1.8s; }
 @keyframes onda { from { opacity: .8; transform: scale(.55); } to { opacity: 0; transform: scale(1.25); } }
@@ -152,17 +152,17 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
 .rana .muesca { fill: var(--mar); }
 .rana .nervios { fill: none; stroke: #2d7a4a; stroke-width: 1.6; stroke-linecap: round; }
 .rana .flor { fill: #f39bc0; }
-.rana .tronco, .rana .cabeza, .rana .parpado { fill: #f5c116; }
-.rana .pata { fill: #eab308; }
-.rana .brazo { fill: none; stroke: #f5c116; stroke-width: 6; stroke-linecap: round; }
-.rana .dedos { fill: none; stroke: #d99a00; stroke-width: 2.6; stroke-linecap: round; }
-.rana .mancha { fill: #1f1b12; }
-.rana .boca { fill: none; stroke: #8a5d00; stroke-width: 1.8; stroke-linecap: round; }
-.rana .iris { fill: #c98a00; }
+.rana .tronco, .rana .cabeza, .rana .pata-tras, .rana .parpado { fill: #4fbf5e; }
+.rana .pata-tras { fill: #43a952; }
+.rana .costado { fill: #3b6fd6; }
+.rana .barriga { fill: #eef6c8; }
+.rana .dedos { fill: #ff8a1f; }
+.rana .garganta { fill: #f3f8d9; transform-origin: center top; animation: croar 2.8s ease-in-out infinite; }
+@keyframes croar { 0%, 60%, 100% { transform: scale(1); } 75% { transform: scale(1.18, 1.5); } }
+.rana .boca { fill: none; stroke: #23602f; stroke-width: 2; stroke-linecap: round; }
+.rana .ojo circle { fill: #e3262f; }
 .rana .pupila { fill: #111; }
-.rana .brillo { fill: #fff; }
 .rana .parpado { transform-origin: center top; transform: scaleY(0); animation: parpadeo 5.5s infinite; }
-/* Cada 8 s: un saltito sobre el nenúfar y un saludo con la mano. */
 .rana .cuerpo-rana { transform-origin: center bottom; animation: saltito 8s ease-in-out infinite; }
 @keyframes saltito {
   0%, 52%, 74%, 100% { transform: none; }
@@ -170,15 +170,8 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
   63% { transform: translateY(-24px) scale(.96, 1.06); }
   69% { transform: translateY(0) scale(1.06, .9); }
 }
-.rana .brazo-saluda { transform-box: view-box; transform-origin: 114px 103px; animation: saludar 8s ease-in-out infinite; }
-@keyframes saludar {
-  0%, 76%, 100% { transform: rotate(0); }
-  80%, 86%, 92% { transform: rotate(-150deg); }
-  83%, 89% { transform: rotate(-122deg); }
-  96% { transform: rotate(0); }
-}
-.rana.salta .cuerpo-rana { animation: salto-rana .8s cubic-bezier(.3, .7, .4, 1); }
-@keyframes salto-rana { 0% { transform: none; } 20% { transform: scale(1.08, .86); } 55% { transform: translateY(-46px) rotate(-8deg) scale(.95, 1.08); } 85% { transform: translateY(0) scale(1.06, .92); } 100% { transform: none; } }
+.rana.salta .cuerpo-rana { animation: salto-rana .75s cubic-bezier(.3, .7, .4, 1); }
+@keyframes salto-rana { 0% { transform: none; } 20% { transform: scale(1.08, .86); } 55% { transform: translateY(-34px) scale(.95, 1.08); } 85% { transform: translateY(0) scale(1.06, .92); } 100% { transform: none; } }
 
 /* Tirano tropical */
 .ave .rama { transform-origin: 0% 100%; animation: mecer 5.2s ease-in-out infinite; }
@@ -186,15 +179,16 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
 .ave .madera { fill: none; stroke: #7b5533; stroke-width: 7; stroke-linecap: round; }
 .ave .ramita { fill: none; stroke: #7b5533; stroke-width: 4; stroke-linecap: round; }
 .ave .hoja { fill: #5aa36a; }
-.ave .lomo { fill: #8a948f; }
-.ave .ala { fill: #5e6863; }
-.ave .pecho { fill: #f4cf35; }
+.ave .lomo { fill: #7f8a74; }
+.ave .ala { fill: #4f5650; }
+.ave .plumas { fill: none; stroke: #6b736c; stroke-width: 1.4; stroke-linecap: round; }
+.ave .pecho { fill: #f2cc2f; }
 .ave .cola { fill: #4f5754; transform-origin: 85% 0%; animation: colear 3.4s ease-in-out infinite; }
 @keyframes colear { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(9deg); } 86% { transform: rotate(-3deg); } }
 .ave .patas { fill: none; stroke: #2b2e30; stroke-width: 2.4; stroke-linecap: round; }
-.ave .craneo, .ave .parpado-ave { fill: #a9b1b3; }
+.ave .craneo, .ave .parpado-ave { fill: #a7afb2; }
 .ave .garganta-ave { fill: #e7e9e3; }
-.ave .antifaz { fill: #4a4f52; }
+.ave .antifaz { fill: #3f4447; }
 .ave .pico { fill: #2b2e30; }
 .ave .ojo-ave circle { fill: #111; }
 .ave .ojo-ave .brillo { fill: #fff; }
@@ -211,7 +205,7 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
   86% { transform: translate(2px, -26px) rotate(4deg); }
   92% { transform: translate(0, 0) scale(1.05, .92); }
 }
-.ave .ala-g { transform-box: view-box; transform-origin: 100px 82px; animation: aleteo-ciclo 9s linear infinite; }
+.ave .ala-g { transform-box: view-box; transform-origin: 104px 81px; animation: aleteo-ciclo 9s linear infinite; }
 @keyframes aleteo-ciclo {
   0%, 64%, 92%, 100% { transform: rotate(0); }
   66%, 70%, 74%, 78%, 82%, 86%, 90% { transform: rotate(125deg); }
