@@ -36,3 +36,9 @@ los audios que muestra el Atlas son de sus autores en iNaturalist, con la
 licencia Creative Commons que cada uno eligió, y se citan junto a cada archivo.
 Los límites del mapa son de geoBoundaries (2017), © colaboradores de
 OpenStreetMap, ODbL 1.0.
+
+## Seguridad y licencia
+
+- Para avisar de una vulnerabilidad: [`SECURITY.md`](SECURITY.md) (hola@davidameth.dev, respuesta en 3 días hábiles).
+- Privacidad y condiciones del sitio: https://biodiversidad.davidameth.dev/privacidad
+- El código no tiene licencia de uso todavía: se puede leer, pero no reutilizar sin permiso. Los datos tienen la suya (arriba).

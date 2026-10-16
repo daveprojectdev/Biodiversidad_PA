@@ -1,4 +1,10 @@
 /* Atlas vivo · dirección C elegida por David el 2026-10-16. */
+/* Fuentes servidas desde el propio Atlas (OFL, de Fontsource; licencias en
+   fuentes/): sin Google Fonts, Google no recibe la IP de cada visita. */
+@font-face { font-family: 'Hanken Grotesk'; font-style: normal; font-weight: 100 900; font-display: swap; src: url(/fuentes/hanken-grotesk-latin-wght-normal.woff2) format('woff2'); }
+@font-face { font-family: 'Hanken Grotesk'; font-style: italic; font-weight: 100 900; font-display: swap; src: url(/fuentes/hanken-grotesk-latin-wght-italic.woff2) format('woff2'); }
+@font-face { font-family: 'Fragment Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fuentes/fragment-mono-latin-400-normal.woff2) format('woff2'); }
+
 :root {
   --fondo: #f7f6f1;
   --blanco: #ffffff;
@@ -54,6 +60,7 @@ h1 span { color: var(--c); }
 .acciones { display: flex; justify-content: space-between; align-items: center; padding: 4px 4px 2px 8px; gap: 8px; flex-wrap: wrap; }
 .acciones small { font: 12px var(--mono); color: var(--gris); }
 .acciones div { display: flex; gap: 8px; margin-left: auto; }
+.nota-voz { margin-top: 10px; font: 12px/1.6 var(--mono); color: var(--gris); max-width: 60ch; }
 .btn { border: 1px solid var(--linea); background: var(--blanco); border-radius: 11px; padding: 10px 16px; font-weight: 700; font-size: 15px; cursor: pointer; }
 .btn.pri { background: var(--tinta); color: #fff; border-color: var(--tinta); }
 .btn:disabled { opacity: .55; cursor: progress; }
@@ -337,3 +344,14 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
 .tema button { border: 0; background: transparent; width: 34px; height: 32px; border-radius: 9px; color: var(--gris); cursor: pointer; display: grid; place-items: center; }
 .tema button[aria-pressed="true"] { background: var(--c); color: #fff; }
 .tema svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Páginas de texto: /acerca y /privacidad. */
+.documento { max-width: 68ch; margin: 24px 0 0; }
+.documento h1 { font-size: clamp(32px, 5vw, 46px); line-height: 1.05; letter-spacing: -.03em; margin-bottom: 18px; }
+.documento h2 { font-size: 21px; letter-spacing: -.01em; margin: 32px 0 8px; }
+.documento p, .documento li { color: var(--tinta); }
+.documento p + p { margin-top: 10px; }
+.documento ul { padding-left: 20px; display: grid; gap: 8px; }
+.documento a { color: var(--c); }
+.documento .fecha { margin-top: 28px; font: 12px/1.6 var(--mono); color: var(--gris); }
+.volver { font: 13px var(--mono); color: var(--gris); }

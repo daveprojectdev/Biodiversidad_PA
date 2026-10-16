@@ -1,0 +1,25 @@
+# Atlas vivo · Biodiversidad de Panamá
+
+> Consultas en lenguaje natural sobre los anfibios y las aves de Panamá. Un modelo de lenguaje convierte la pregunta (en español, escrita o hablada) en SQL sobre una base de datos real de avistamientos de GBIF, y la respuesta se dibuja sobre el mapa del país. Proyecto personal y sin fines de lucro de David Ameth Martínez Sánchez (https://davidameth.dev).
+
+## Datos
+
+- Anfibios: 8.430 avistamientos. GBIF.org (7 May 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.zcy9ys
+- Aves: 51.761 avistamientos tras la limpieza (56.203 en bruto). GBIF.org (13 May 2026) GBIF Occurrence Download https://doi.org/10.15468/dl.qpx3vw
+- Licencia de los datos: CC BY-NC 4.0. Fotos y audios: de sus autores en iNaturalist, con su licencia Creative Commons.
+- Mapa: geoBoundaries (2017), © colaboradores de OpenStreetMap, ODbL 1.0.
+
+## Cómo funciona
+
+- Página y API en Cloudflare (Pages y un Worker con Hono); Postgres en Neon con un rol de solo lectura y 10 s por consulta.
+- El SQL lo escribe gpt-oss-20b en Groq, con Gemini de respaldo; si Postgres rechaza el SQL, el error vuelve al modelo (hasta 3 intentos).
+- Voz: la pregunta hablada se pasa a texto con Whisper (Groq) y la respuesta se dice con la voz es-PA-RobertoNeural.
+- Las listas se cortan en 10 filas salvo que se pidan todas; nunca salen más de 100.
+
+## Páginas
+
+- [Atlas](https://biodiversidad.davidameth.dev/): el mapa y la caja de preguntas
+- [Acerca del Atlas](https://biodiversidad.davidameth.dev/acerca): preguntas frecuentes
+- [Privacidad y uso](https://biodiversidad.davidameth.dev/privacidad): qué datos se usan y condiciones
+- [Arquitectura técnica](https://davidameth.dev/proyectos/biodiversidad/): el documento completo, con decisiones y deuda técnica
+- [Código](https://github.com/daveprojectdev/Biodiversidad_PA)

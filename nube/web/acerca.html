@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acerca del Atlas vivo · Biodiversidad de Panamá</title>
+<meta name="description" content="Qué es el Atlas vivo, de dónde salen sus datos de anfibios y aves de Panamá, qué tan confiables son las respuestas y cómo funciona por dentro.">
+<meta name="color-scheme" content="light dark">
+<script src="/tema.js"></script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="canonical" href="https://biodiversidad.davidameth.dev/acerca">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_PA">
+<meta property="og:title" content="Acerca del Atlas vivo · Biodiversidad de Panamá">
+<meta property="og:description" content="Qué es el Atlas vivo, de dónde salen sus datos de anfibios y aves de Panamá, qué tan confiables son las respuestas y cómo funciona por dentro.">
+<meta property="og:url" content="https://biodiversidad.davidameth.dev/acerca">
+<meta property="og:image" content="https://biodiversidad.davidameth.dev/tarjeta-social.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preload" href="/fuentes/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilos.css">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "@id": "https://biodiversidad.davidameth.dev/acerca#preguntas",
+ "url": "https://biodiversidad.davidameth.dev/acerca",
+ "inLanguage": "es",
+ "name": "Acerca del Atlas vivo",
+ "isPartOf": {
+  "@id": "https://biodiversidad.davidameth.dev/#aplicacion"
+ },
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "¿Qué es el Atlas vivo?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Un sitio para preguntar en español, escribiendo o hablando, por los anfibios y las aves de Panamá. Un modelo de lenguaje convierte tu pregunta en una consulta SQL, la consulta corre sobre una base de datos real de avistamientos y la respuesta se dibuja sobre el mapa del país."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "¿De dónde salen los datos?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "De GBIF, la red mundial de datos de biodiversidad: 8.430 avistamientos de anfibios (descarga del 7 de mayo de 2026, DOI 10.15468/dl.zcy9ys) y 51.761 de aves (13 de mayo de 2026, DOI 10.15468/dl.qpx3vw, tras la limpieza). Los reunieron miles de personas en iNaturalist y otras fuentes."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "¿Qué puedo preguntar?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Por especies, familias, provincias, años y temporadas. Por ejemplo: «¿Qué provincia tiene más especies?», «¿Dónde se ha visto la rana de ojos rojos?» o «¿Cuántos avistamientos de garzas hay por provincia?»."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "¿Qué tan confiables son las respuestas?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Los datos son reales, pero el SQL lo escribe un modelo y puede equivocarse. Por eso «Ver cómo funciona» muestra el SQL exacto que se ejecutó. Las listas largas se cortan en 10 filas, salvo que pidas «todas». Las 10 preguntas de validación dieron el resultado correcto en las dos colecciones."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "¿Cómo funciona por dentro?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "La página y la API corren en Cloudflare; la base es Postgres en Neon, con un usuario que solo puede leer. El SQL lo escribe gpt-oss-20b en Groq, con Gemini de respaldo. La voz se pasa a texto con Whisper y la respuesta la dice la voz panameña de Roberto. La arquitectura completa está en davidameth.dev/proyectos/biodiversidad."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "¿Cuántas preguntas puedo hacer?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Hasta 60 al día y 15 por minuto. El Atlas usa los planes gratuitos de los modelos, así que en horas de mucho uso puede pedirte que esperes un minuto."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "¿Puedo usar los datos?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Sí, citando a GBIF y sin fines comerciales (licencia CC BY-NC 4.0). Las descargas completas están en los dos DOI. Las fotos y los audios son de sus autores en iNaturalist, con la licencia que se indica en cada uno."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "¿Quién lo hizo?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "David Ameth Martínez Sánchez (davidameth.dev). Nació como proyecto final de Base de Datos II en la Universidad Tecnológica de Panamá, con Emanuel Quintero, y en octubre de 2026 pasó a la nube."
+   }
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<div class="pagina">
+  <header class="cabecera">
+    <a class="marca" href="/">Atlas vivo <span>·</span> Biodiversidad de Panamá</a>
+    <a class="volver" href="/">← Volver al atlas</a>
+  </header>
+  <main class="documento">
+    <h1>Acerca del Atlas vivo</h1>
+    <!-- Las preguntas se repiten en el JSON-LD de arriba: si cambias una, cambia las dos. -->
+    <h2>¿Qué es el Atlas vivo?</h2>
+    <p>Un sitio para preguntar en español, escribiendo o hablando, por los anfibios y las aves de Panamá. Un modelo de lenguaje convierte tu pregunta en una consulta SQL, la consulta corre sobre una base de datos real de avistamientos y la respuesta se dibuja sobre el mapa del país.</p>
+    <h2>¿De dónde salen los datos?</h2>
+    <p>De <a href="https://www.gbif.org" rel="noopener">GBIF</a>, la red mundial de datos de biodiversidad: 8.430 avistamientos de anfibios (descarga del 7 de mayo de 2026, DOI <a href="https://doi.org/10.15468/dl.zcy9ys" rel="noopener">10.15468/dl.zcy9ys</a>) y 51.761 de aves (13 de mayo de 2026, DOI <a href="https://doi.org/10.15468/dl.qpx3vw" rel="noopener">10.15468/dl.qpx3vw</a>, tras la limpieza). Los reunieron miles de personas en iNaturalist y otras fuentes.</p>
+    <h2>¿Qué puedo preguntar?</h2>
+    <p>Por especies, familias, provincias, años y temporadas. Por ejemplo: «¿Qué provincia tiene más especies?», «¿Dónde se ha visto la rana de ojos rojos?» o «¿Cuántos avistamientos de garzas hay por provincia?».</p>
+    <h2>¿Qué tan confiables son las respuestas?</h2>
+    <p>Los datos son reales, pero el SQL lo escribe un modelo y puede equivocarse. Por eso «Ver cómo funciona» muestra el SQL exacto que se ejecutó. Las listas largas se cortan en 10 filas, salvo que pidas «todas». Las 10 preguntas de validación dieron el resultado correcto en las dos colecciones.</p>
+    <h2>¿Cómo funciona por dentro?</h2>
+    <p>La página y la API corren en Cloudflare; la base es Postgres en Neon, con un usuario que solo puede leer. El SQL lo escribe gpt-oss-20b en Groq, con Gemini de respaldo. La voz se pasa a texto con Whisper y la respuesta la dice la voz panameña de Roberto. La arquitectura completa está en <a href="https://davidameth.dev/proyectos/biodiversidad/">davidameth.dev/proyectos/biodiversidad</a>.</p>
+    <h2>¿Cuántas preguntas puedo hacer?</h2>
+    <p>Hasta 60 al día y 15 por minuto. El Atlas usa los planes gratuitos de los modelos, así que en horas de mucho uso puede pedirte que esperes un minuto.</p>
+    <h2>¿Puedo usar los datos?</h2>
+    <p>Sí, citando a GBIF y sin fines comerciales (licencia <a href="https://creativecommons.org/licenses/by-nc/4.0/deed.es" rel="noopener">CC BY-NC 4.0</a>). Las descargas completas están en los dos DOI. Las fotos y los audios son de sus autores en iNaturalist, con la licencia que se indica en cada uno.</p>
+    <h2>¿Quién lo hizo?</h2>
+    <p>David Ameth Martínez Sánchez (<a href="https://davidameth.dev">davidameth.dev</a>). Nació como proyecto final de Base de Datos II en la Universidad Tecnológica de Panamá, con Emanuel Quintero, y en octubre de 2026 pasó a la nube.</p>
+  </main>
+  <footer class="pie">
+    <span>Datos: <a href="https://www.gbif.org" rel="noopener">GBIF.org</a>, CC BY-NC 4.0 · DOI anfibios <a href="https://doi.org/10.15468/dl.zcy9ys" rel="noopener">10.15468/dl.zcy9ys</a> · DOI aves <a href="https://doi.org/10.15468/dl.qpx3vw" rel="noopener">10.15468/dl.qpx3vw</a> · Mapa: geoBoundaries, © colaboradores de <a href="https://www.openstreetmap.org/copyright" rel="noopener">OpenStreetMap</a></span>
+    <span>Diseño y desarrollo: <a href="https://davidameth.dev">David Ameth Martínez Sánchez</a> · <a href="https://davidameth.dev/proyectos/biodiversidad/">Cómo está hecho ↗</a> · <a href="/acerca">Acerca del Atlas</a> · <a href="/privacidad">Privacidad y uso</a></span>
+  </footer>
+</div>
+</body>
+</html>

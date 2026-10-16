@@ -54,6 +54,25 @@ el de la versión entregada y no se toca.
   un contorno claro para no perderse en el mar. Todo el texto pasa de 7:1.
 - Sin dependencias ni paso de compilación: `index.html`, `estilos.css`, `app.js`, `tema.js`.
 
+## Páginas de texto, buscadores y estadísticas (2026-10-16)
+
+- `acerca.html` (`/acerca`, preguntas frecuentes) y `privacidad.html`
+  (`/privacidad`, privacidad y condiciones de uso), con textos aprobados por
+  David; enlazadas en el pie, y la de privacidad también debajo de la caja de
+  pregunta (aviso de la voz). Las preguntas de `/acerca` se repiten en su
+  JSON-LD (`FAQPage`): si cambias una, cambia las dos.
+- Datos estructurados en la portada: el sitio (`WebApplication`), los dos
+  conjuntos de GBIF (`Dataset`, con DOI y licencia) y el autor, con el mismo
+  `@id` que usa davidameth.dev (`https://davidameth.dev/#persona`).
+- `sitemap.xml`, `robots.txt` (con el sitemap; las rutas de la API no se
+  rastrean) y `llms.txt` (resumen para asistentes de IA).
+- Fuentes servidas desde `fuentes/` (Hanken Grotesk variable y Fragment Mono,
+  OFL, de Fontsource, solo el subconjunto latino): sin Google Fonts, Google no
+  recibe la IP de cada visita.
+- Estadísticas: Cloudflare Web Analytics, sin cookies, activado en el panel de
+  Pages (Cloudflare inserta su script; la CSP permite
+  `static.cloudflareinsights.com` y `cloudflareinsights.com`).
+
 ## Íconos y citas
 
 - `favicon.svg` es la cara de la rana de ojos rojos (elegida por David);

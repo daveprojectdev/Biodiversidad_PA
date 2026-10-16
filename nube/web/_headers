@@ -5,4 +5,4 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
-  Content-Security-Policy: default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://inaturalist-open-data.s3.amazonaws.com https://static.inaturalist.org; media-src blob: https://inaturalist-open-data.s3.amazonaws.com https://static.inaturalist.org; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; style-src 'self'; font-src 'self'; script-src 'self' https://static.cloudflareinsights.com; img-src 'self' data: https://inaturalist-open-data.s3.amazonaws.com https://static.inaturalist.org; media-src blob: https://inaturalist-open-data.s3.amazonaws.com https://static.inaturalist.org; connect-src 'self' https://cloudflareinsights.com; base-uri 'none'; form-action 'self'; frame-ancestors 'none'
