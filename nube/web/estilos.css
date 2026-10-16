@@ -42,9 +42,10 @@ button, textarea { font: inherit; color: inherit; }
 .pestanas button[aria-pressed="true"] { background: var(--c); color: #fff; }
 
 .escena { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 28px; align-items: start; padding: 24px 0; }
+.antetitulo { font: 12px/1.5 var(--mono); text-transform: uppercase; letter-spacing: .1em; color: var(--c); margin-bottom: 14px; max-width: 46ch; }
 h1 { font-size: clamp(36px, 5.2vw, 66px); line-height: 1; letter-spacing: -.04em; font-weight: 800; }
 h1 span { color: var(--c); }
-.lead { color: var(--gris); margin-top: 14px; max-width: 46ch; }
+.lead { color: var(--gris); margin-top: 14px; max-width: 50ch; }
 
 .caja { margin-top: 24px; background: var(--blanco); border: 1px solid var(--linea); border-radius: 18px; padding: 8px; }
 .caja:focus-within { border-color: var(--c); }

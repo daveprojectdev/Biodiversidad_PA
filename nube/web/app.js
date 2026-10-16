@@ -138,8 +138,9 @@ function mostrarPanorama(datos) {
   $("nota-mapa").textContent = `${num(datos.total_avistamientos)} avistamientos · ${datos.rango_anios}`;
   pintarMapa(new Map(datos.provincias_detalle.map((p) => [p.provincia, p.especies])), "especies");
   $("lead").textContent =
-    `${num(datos.total_avistamientos)} avistamientos de ${nombre} hechos por ` +
-    `${num(datos.total_observadores)} personas en todo el país. Pregunta en español, escribiendo o hablando.`;
+    "Pregunta en español, escribiendo o hablando, como le preguntarías a una persona. " +
+    "Un modelo de lenguaje convierte tu pregunta en SQL y la respuesta sale de una base de datos real: " +
+    `${num(datos.total_avistamientos)} avistamientos de ${nombre} hechos por ${num(datos.total_observadores)} personas en todo el país.`;
   const masDiversa = datos.provincias_detalle[0];
   $("resumen").innerHTML = [
     [num(datos.total_especies), "especies"],
