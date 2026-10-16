@@ -25,7 +25,7 @@ respuesta que la app de Flask.
 |---|---|
 | `src/prompt.ts` | El prompt de la app, con las reglas de Postgres (sección «DIALECTO POSTGRESQL») |
 | `src/sql.ts` | Validación del SQL (solo `SELECT`), `LIMIT`, esquema delante de cada tabla, columnas de multimedia, y `ILIKE` → `LIKE` |
-| `src/llm.ts` | Cascada Groq (`openai/gpt-oss-20b`) → modelos de Gemini en orden (`GEMINI_MODELOS`), por `fetch` |
+| `src/llm.ts` | Cascada: los modelos de Groq en orden (`GROQ_MODELOS`) → los de Gemini (`GEMINI_MODELOS`), por `fetch` |
 | `src/db.ts` | Consultas a Neon por HTTP en una transacción de solo lectura |
 | `src/multimedia.ts` | Fotos y audios de una observación de iNaturalist, pedidos a GBIF (iNaturalist da 429 a las IP de Cloudflare); solo licencia CC, con caché |
 | `src/voz.ts` | Transcripción con Groq y cliente propio del servicio de voz de Microsoft Edge (WebSocket), con caché de 30 días por texto |
@@ -64,6 +64,26 @@ La pausa larga es por la cuota gratis de Groq (abajo). Resultado del
 respaldo (`gemini-3.5-flash-lite`, con Groq ya sin cuota del día). Aves por
 Groq con razonamiento bajo queda por correr cuando se renueve la cuota; con el
 razonamiento normal dio 9 de 9 respondidas.
+
+Desde el 2026-10-16 la validación tiene una pregunta 11, la de mayor
+complejidad que se probó en la demostración: «¿Qué familia tuvo más especies
+distintas en Chiriquí en 2025?» (cruza cuatro tablas y filtra por año y
+provincia; Hylidae con 9 en anfibios, Tyrannidae con 48 en aves). También es la
+quinta pregunta sugerida de la página.
+
+Para validar un modelo solo, con la caché de respuestas apagada y sin Gemini
+detrás:
+
+```
+npx wrangler dev --port 8788 --persist-to .wrangler/v-8788 --var GROQ_MODELOS:qwen/qwen3.8-27b --var GEMINI_MODELOS: --var CACHE_RESPUESTAS_DIAS:0
+python nube/worker/scripts/validar_rubrica.py --url http://localhost:8788 --pausa 75 --etiqueta groq-qwen3.8-27b
+```
+
+(`--persist-to` con una ruta corta: con la de la carpeta temporal de Windows el
+Durable Object pasa de 260 caracteres y responde 500.) Resultado del
+2026-10-16: `gpt-oss-120b` 22 de 22 y `qwen3.8-27b` 21 de 22 (la que faltó fue
+un 429 de cuota por minuto, no un SQL equivocado). Informes en
+`validacion_*_groq-*.txt`.
 
 Ojo con lo que la validación da por bueno: la regla «LIMIT 10 por defecto» del
 prompt (heredada de la app) corta las listas. «¿Qué especies se vieron en Bocas
@@ -155,12 +175,20 @@ Durable Objects hay al día (100.000 en el gratis).
 - **Las cuotas gratis son el cuello de botella** (medido el 2026-10-15/16).
   Cada pregunta gasta de 3.000 a 5.500 tokens, casi todo el prompt (el glosario
   de aves pesa más).
-  - Groq, `gpt-oss-20b`: 8.000 tokens por minuto y 200.000 por día, o sea
-    unas 2 preguntas por minuto y unas 40 al día en todo el sistema.
+  - Groq, en este orden: `gpt-oss-20b`, `gpt-oss-120b` y `qwen3.8-27b`. Cada
+    uno tiene su propia cuota: 8.000 tokens por minuto y 1.000 peticiones al
+    día (cabeceras de Groq, 2026-10-16). Con `gpt-oss-20b` se midieron 200.000
+    tokens al día, unas 40 preguntas; si los otros dos tienen lo mismo, la
+    parte de Groq sube a unas 120 al día.
   - Gemini, `gemini-2.5-flash`: 20 peticiones al día.
   - Gemini, `gemini-3.5-flash-lite`: cuota propia, no medida todavía.
-  El razonamiento de `gpt-oss-20b` va en «bajo» (`reasoning_effort`): responde
-  antes y gasta menos cuota. Cuando todos responden 429, el Worker contesta 503
+  El razonamiento de los `gpt-oss` va en «bajo» (`reasoning_effort`): responde
+  antes y gasta menos cuota.
+- **Respuestas guardadas:** una pregunta igual (sin contar mayúsculas, acentos
+  ni signos) en la misma colección devuelve la respuesta guardada 7 días
+  (`CACHE_RESPUESTAS_DIAS`; 0 la apaga). No llama al modelo ni gasta el cupo de
+  la persona; «Ver cómo funciona» lo dice. Las preguntas sugeridas de la
+  portada, las que más se repiten, solo gastan cuota la primera vez. Cuando todos responden 429, el Worker contesta 503
   con «Intenta de nuevo en un minuto». El tope global de 800 al día no se
   alcanza con estas cuotas: es para cuando haya un plan de pago.
 

@@ -1,5 +1,5 @@
 // ============================================================
-// Cascada de modelos: Groq (openai/gpt-oss-20b) -> modelos de Gemini.
+// Cascada de modelos: los de Groq en orden (GROQ_MODELOS) -> los de Gemini.
 // Port de la sección 8 de app/app_flask.py. Ollama no existe en la
 // nube; las llamadas van por fetch a las API REST, sin SDK.
 // ============================================================
@@ -8,8 +8,8 @@ import { limpiarSql } from "./sql";
 export interface EnvLlm {
   GROQ_API_KEY?: string;
   GEMINI_API_KEY?: string;
-  GROQ_MODEL: string;
-  GEMINI_MODELOS: string; // separados por coma, en orden de preferencia
+  GROQ_MODELOS: string; // separados por coma, en orden de preferencia; cada uno con su cuota
+  GEMINI_MODELOS: string; // ídem
 }
 
 export type ResultadoLlm =
@@ -20,21 +20,21 @@ const FUERA_DE_ALCANCE = "ERROR_FUERA_DE_ALCANCE";
 // gpt-oss razona antes de responder: a veces pasa de 25 s.
 const ESPERA_MS = 45_000;
 
-async function generarGroq(env: EnvLlm, pregunta: string, prompt: string): Promise<string> {
+async function generarGroq(env: EnvLlm, pregunta: string, prompt: string, modelo: string): Promise<string> {
   if (!env.GROQ_API_KEY) throw new Error("falta GROQ_API_KEY");
   const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
     method: "POST",
     headers: { Authorization: `Bearer ${env.GROQ_API_KEY}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: env.GROQ_MODEL,
+      model: modelo,
       messages: [
         { role: "system", content: prompt },
         { role: "user", content: pregunta },
       ],
       temperature: 0.1,
-      // Razonamiento corto: responde antes y gasta menos de la cuota por
-      // minuto, que también cuenta los tokens del razonamiento.
-      reasoning_effort: "low",
+      // Razonamiento corto en los gpt-oss: responde antes y gasta menos de la
+      // cuota por minuto, que también cuenta los tokens del razonamiento.
+      ...(modelo.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
     }),
     signal: AbortSignal.timeout(ESPERA_MS),
   });
@@ -68,16 +68,19 @@ async function generarGemini(env: EnvLlm, pregunta: string, prompt: string, mode
   return limpiarSql(texto);
 }
 
-// Groq primero; después cada modelo de Gemini, que tiene su propia cuota
-// diaria (gemini-2.5-flash gratis: solo 20 al día).
+const lista = (texto: string) => texto.split(",").map((m) => m.trim()).filter(Boolean);
+
+// Los modelos de Groq primero y después los de Gemini; cada modelo tiene su
+// propia cuota diaria (gemini-2.5-flash gratis: solo 20 al día). El primero
+// de Groq se llama «groq» a secas, como antes, para la página y los registros.
 function proveedores(env: EnvLlm): [string, (pregunta: string, prompt: string) => Promise<string>][] {
-  const lista: [string, (pregunta: string, prompt: string) => Promise<string>][] = [
-    ["groq", (p, s) => generarGroq(env, p, s)],
-  ];
-  for (const modelo of env.GEMINI_MODELOS.split(",").map((m) => m.trim()).filter(Boolean)) {
-    lista.push([`gemini:${modelo}`, (p, s) => generarGemini(env, p, s, modelo)]);
+  const lista_: [string, (pregunta: string, prompt: string) => Promise<string>][] = lista(env.GROQ_MODELOS).map(
+    (modelo, i) => [i === 0 ? "groq" : `groq:${modelo}`, (p: string, s: string) => generarGroq(env, p, s, modelo)],
+  );
+  for (const modelo of lista(env.GEMINI_MODELOS)) {
+    lista_.push([`gemini:${modelo}`, (p, s) => generarGemini(env, p, s, modelo)]);
   }
-  return lista;
+  return lista_;
 }
 
 export async function generarSqlCascada(env: EnvLlm, pregunta: string, prompt: string): Promise<ResultadoLlm> {

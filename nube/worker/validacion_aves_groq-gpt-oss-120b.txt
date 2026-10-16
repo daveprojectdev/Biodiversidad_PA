@@ -1,0 +1,42 @@
+== aves ==
+[igual]  1. ¿Cuántas especies hay registradas? — 1 filas — groq
+         SQL: SELECT COUNT(*) AS total FROM aves.especie LIMIT 100
+[igual]  2. ¿Cuántos observadores hay? — 1 filas — groq
+         SQL: SELECT COUNT(*) AS total FROM aves.observador LIMIT 100
+[igual]  3. ¿Qué especies se vieron en Bocas del Toro? — 10 filas, todas en la referencia (limitado a 10 de 367 por el LIMIT del modelo) — groq
+         SQL: SELECT DISTINCT nombre_cientifico FROM aves.vista_avistamiento_completo WHERE provincia LIKE '%Bocas del Toro%' LIMIT 10
+[igual]  4. ¿Cuántos avistamientos hubo en 2025? — 1 filas — groq
+         SQL: SELECT COUNT(*) AS total FROM aves.avistamiento WHERE anio = 2025 LIMIT 100
+[igual]  5. ¿Cuántos registros tienen foto disponible? — 1 filas — groq
+         SQL: SELECT COUNT(*) AS total FROM aves.avistamiento WHERE media_type LIKE '%StillImage%' LIMIT 100
+[igual]  6. ¿Cuál es la especie más avistada? — 1 filas — groq
+         SQL: SELECT e.nombre_cientifico, COUNT(*) AS total
+FROM aves.avistamiento a
+JOIN aves.especie e ON a.especie_id = e.especie_id
+GROUP BY e.nombre_cientifico
+ORDER BY total DESC
+LIMIT 1
+[igual]  7. ¿Qué familia tiene más especies? — 1 filas — groq
+         SQL: SELECT familia, COUNT(DISTINCT especie_id) AS total
+FROM aves.vista_avistamiento_completo
+GROUP BY familia
+ORDER BY total DESC
+LIMIT 1
+[igual]  8. ¿En qué provincias se ha visto Tyrannus melancholicus? — 13 filas — groq
+         SQL: SELECT DISTINCT provincia FROM aves.vista_avistamiento_completo WHERE nombre_cientifico LIKE '%Tyrannus melancholicus%' LIMIT 100
+[igual]  9. ¿Cuántos avistamientos hubo por año? — 3 filas — groq
+         SQL: SELECT anio, COUNT(*) AS total FROM aves.avistamiento GROUP BY anio ORDER BY anio LIMIT 10
+[igual]  10. ¿Qué provincia tiene mayor diversidad de especies? — 1 filas — groq
+         SQL: SELECT provincia, COUNT(DISTINCT especie_id) AS total
+FROM aves.vista_avistamiento_completo
+GROUP BY provincia
+ORDER BY total DESC
+LIMIT 1
+[igual]  11. ¿Qué familia tuvo más especies distintas en Chiriquí en 2025? — 1 filas — groq
+         SQL: SELECT familia, COUNT(DISTINCT especie_id) AS total
+FROM aves.vista_avistamiento_completo
+WHERE provincia LIKE '%Chiriquí%' AND anio = 2025
+GROUP BY familia
+ORDER BY total DESC
+LIMIT 1
+Resultado: 11 de 11 preguntas con la misma respuesta que la referencia.

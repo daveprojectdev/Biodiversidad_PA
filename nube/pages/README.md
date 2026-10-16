@@ -12,6 +12,9 @@ El sitio público es **https://biodiversidad.davidameth.dev**.
   DNS en Spaceship, no en Cloudflare. Un Worker solo admite dominios de zonas
   de Cloudflare; Pages acepta un CNAME desde fuera.
 
+- **Direcciones que no existen:** `nube/web/404.html` hace que Pages responda
+  404 con esa página (sin ella devolvía la portada con 200, como si existiera).
+
 ## DNS (en Spaceship, lo crea David)
 
 | Tipo | Host | Valor |

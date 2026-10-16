@@ -21,7 +21,8 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["LimiteDeConsultas"] }],
   "vars": {
-    "GROQ_MODEL": "openai/gpt-oss-20b",
+    // En orden; cada modelo de Groq tiene su propia cuota diaria gratis.
+    "GROQ_MODELOS": "openai/gpt-oss-20b,openai/gpt-oss-120b,qwen/qwen3.8-27b",
     // Respaldo, en orden. Cada modelo tiene su cuota diaria gratis aparte.
     "GEMINI_MODELOS": "gemini-2.5-flash,gemini-3.5-flash-lite",
     // Por persona (IP): 15 por minuto, como /consultar en app_flask.py.
@@ -29,6 +30,8 @@
     "LIMITE_POR_DIA": "60",
     // Tope de todo el sistema, por debajo de la cuota gratis de Groq.
     "LIMITE_GLOBAL_POR_DIA": "800",
+    // Días que se guarda la respuesta de una pregunta repetida (0 = nunca).
+    "CACHE_RESPUESTAS_DIAS": "7",
     "ORIGENES": "https://biodiversidad.davidameth.dev,http://localhost:8787,http://127.0.0.1:8787"
   }
 }

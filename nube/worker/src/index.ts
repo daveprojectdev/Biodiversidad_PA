@@ -31,6 +31,7 @@ interface Env extends EnvLlm {
   LIMITE_POR_MINUTO: string;
   LIMITE_POR_DIA: string;
   LIMITE_GLOBAL_POR_DIA: string;
+  CACHE_RESPUESTAS_DIAS: string; // 0 la apaga (para validar modelos)
 }
 
 const app = new Hono<{ Bindings: Env }>();
@@ -207,6 +208,28 @@ async function generarYEjecutar(env: Env, pregunta: string, esquema: Coleccion, 
   return { llm, sql, resultado, intentos: intento, tiempos };
 }
 
+// ── Respuestas guardadas ──
+// Una pregunta igual (sin mayúsculas, acentos ni signos) en la misma
+// colección devuelve la respuesta guardada: no llama al modelo ni gasta el
+// cupo de la persona. Las sugeridas de la portada son las que más se repiten.
+// Los datos no cambian, así que la respuesta guardada sigue siendo correcta.
+
+function normalizarPregunta(pregunta: string): string {
+  return pregunta
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[¿?¡!.,;:«»"']/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function claveRespuesta(esquema: Coleccion, pregunta: string): Promise<Request> {
+  const resumen = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${esquema}|${normalizarPregunta(pregunta)}`));
+  const hexa = [...new Uint8Array(resumen)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return new Request(`https://cache.interna/respuestas/v1/${hexa}`);
+}
+
 // ── Rutas ──
 
 app.get("/estado", (c) =>
@@ -273,6 +296,15 @@ app.post("/consultar", async (c) => {
   const conflicto = detectarConflictoColeccion(pregunta, esquema);
   if (conflicto) return c.json({ error: conflicto }, 400);
 
+  const diasCache = Number(c.env.CACHE_RESPUESTAS_DIAS ?? "0");
+  const clave = diasCache > 0 ? await claveRespuesta(esquema, pregunta) : null;
+  const guardada = clave ? await caches.default.match(clave) : undefined;
+  if (guardada) {
+    const datosGuardados = (await guardada.json()) as Record<string, unknown>;
+    console.log(`PREGUNTA (guardada): ${pregunta.slice(0, 80)} | COLECCION: ${esquema}`);
+    return c.json({ ...datosGuardados, pregunta, desde_cache: true });
+  }
+
   // Se cuenta después de las validaciones baratas: una pregunta vacía no gasta cupo.
   const limite = await limitar(
     c.env,
@@ -295,7 +327,7 @@ app.post("/consultar", async (c) => {
 
   const proveedor = "proveedor" in llm ? llm.proveedor : null;
   console.log(`PREGUNTA: ${pregunta.slice(0, 80)} | COLECCION: ${esquema} | PROVEEDOR: ${proveedor} | INTENTOS: ${intentos}`);
-  return c.json({
+  const respuesta = {
     pregunta,
     coleccion: esquema === "anfibios" ? "amphibia" : "aves",
     sql,
@@ -303,7 +335,15 @@ app.post("/consultar", async (c) => {
     intentos,
     tiempos,
     ...("error" in resultado ? { error: resultado.error } : resultado),
-  });
+  };
+  // Solo se guardan las que salieron bien.
+  if (clave && !("error" in resultado)) {
+    const guardar = new Response(JSON.stringify(respuesta), {
+      headers: { "Content-Type": "application/json", "Cache-Control": `public, max-age=${diasCache * 86_400}` },
+    });
+    c.executionCtx.waitUntil(caches.default.put(clave, guardar));
+  }
+  return c.json(respuesta);
 });
 
 // Fotos y audios con licencia CC de una observación de iNaturalist (ver multimedia.ts).

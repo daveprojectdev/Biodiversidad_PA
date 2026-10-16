@@ -1,4 +1,5 @@
-"""Las 10 preguntas de la rúbrica, por el Worker, contra el SQL de referencia.
+"""Las 10 preguntas de la rúbrica y la compleja de la demostración (la 11),
+por el Worker, contra el SQL de referencia.
 
     python nube/worker/scripts/validar_rubrica.py                 # las dos colecciones
     python nube/worker/scripts/validar_rubrica.py --coleccion aves
@@ -14,7 +15,10 @@ alguna (occurrence_url, un conteo), así que una fila de referencia
 coincide con una fila del Worker si todos sus valores aparecen en ella. Si
 el modelo puso un LIMIT menor que el total (la regla «LIMIT 10 por
 defecto» del prompt), se exigen las primeras filas de la referencia.
-Escribe un informe por colección en nube/worker/validacion_<coleccion>.txt.
+Escribe un informe por colección en nube/worker/validacion_<coleccion>[_<etiqueta>].txt.
+Para validar un modelo, el Worker debe correr con la caché de respuestas
+apagada (--var CACHE_RESPUESTAS_DIAS:0) o las preguntas repetidas no llegan
+al modelo.
 """
 import argparse
 import json
@@ -43,6 +47,15 @@ PREGUNTAS = [
     "¿Cuántos avistamientos hubo por año?",
     "¿Qué provincia tiene mayor diversidad de especies?",
 ]
+# La 11 no es de la rúbrica: es la de mayor complejidad estructural que se
+# probó en la demostración (cruza cuatro tablas y filtra por año y provincia a
+# la vez; ver davidameth.dev/proyectos/biodiversidad, sección 6). Su SQL de
+# referencia va aquí porque no está en consultas_referencia.sql.
+PREGUNTA_COMPLEJA = "¿Qué familia tuvo más especies distintas en Chiriquí en 2025?"
+SQL_COMPLEJA = """SELECT f.nombre AS familia, COUNT(DISTINCT e.especie_id) AS especies
+FROM avistamiento a JOIN especie e ON a.especie_id = e.especie_id
+JOIN familia f ON e.familia_id = f.familia_id JOIN provincia p ON a.provincia_id = p.provincia_id
+WHERE p.nombre = 'Chiriquí' AND a.anio = 2025 GROUP BY f.nombre ORDER BY especies DESC LIMIT 1"""
 # La #8 de aves en consultas_referencia.sql dice REEMPLAZAR_CON_ESPECIE_REAL:
 # se usa la más avistada, como indica el propio archivo.
 ESPECIE_8 = {"anfibios": "Oophaga pumilio", "aves": "Tyrannus melancholicus"}
@@ -122,6 +135,7 @@ def main():
     ap.add_argument("--coleccion", choices=["anfibios", "aves"])
     ap.add_argument("--url", default="http://localhost:8787")
     ap.add_argument("--pausa", type=float, default=8.0, help="segundos entre preguntas (cuota de Groq)")
+    ap.add_argument("--etiqueta", default="", help="se agrega al nombre del informe (p. ej. el modelo probado)")
     args = ap.parse_args()
     colecciones = [args.coleccion] if args.coleccion else ["anfibios", "aves"]
 
@@ -137,7 +151,8 @@ def main():
         fallos_antes, total_antes = fallos, total
         pg.execute(f"SET search_path = {coleccion}, public")
         log(f"== {coleccion} ==")
-        for n, (pregunta, sql_ref) in enumerate(zip(PREGUNTAS, referencia(coleccion)), 1):
+        pares = [*zip(PREGUNTAS, referencia(coleccion)), (PREGUNTA_COMPLEJA, SQL_COMPLEJA)]
+        for n, (pregunta, sql_ref) in enumerate(pares, 1):
             pregunta = pregunta.format(especie=ESPECIE_8[coleccion])
             ref = [tuple(f) for f in pg.execute(sql_ref).fetchall()]
             r = preguntar(args.url, coleccion, pregunta)
@@ -155,7 +170,8 @@ def main():
             time.sleep(args.pausa)
         n_total, n_fallos = total - total_antes, fallos - fallos_antes
         log(f"Resultado: {n_total - n_fallos} de {n_total} preguntas con la misma respuesta que la referencia.")
-        salida = Path(__file__).resolve().parents[1] / f"validacion_{coleccion}.txt"
+        sufijo = f"_{args.etiqueta}" if args.etiqueta else ""
+        salida = Path(__file__).resolve().parents[1] / f"validacion_{coleccion}{sufijo}.txt"
         salida.write_text("\n".join(lineas) + "\n", encoding="utf-8")
         log()
     sys.exit(1 if fallos else 0)

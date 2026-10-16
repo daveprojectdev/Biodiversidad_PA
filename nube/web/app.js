@@ -14,6 +14,7 @@ const COLECCIONES = {
       "¿Dónde se ha visto la rana de ojos rojos?",
       "¿Cuál es la especie más avistada?",
       "¿Se ven más en temporada seca o lluviosa?",
+      "¿Qué familia tuvo más especies distintas en Chiriquí en 2025?",
     ],
   },
   aves: {
@@ -24,6 +25,7 @@ const COLECCIONES = {
       "¿En qué provincias se han visto colibríes?",
       "¿Cuál es el ave más avistada?",
       "¿Cuántos avistamientos de garzas hay por provincia?",
+      "¿Qué familia tuvo más especies distintas en Chiriquí en 2025?",
     ],
   },
 };
@@ -291,10 +293,12 @@ $("visor").addEventListener("click", (ev) => {
   if (ev.target === $("visor")) $("visor").close(); // clic fuera de la foto
 });
 
-// "groq" -> "gpt-oss-20b (Groq)"; "gemini:gemini-3.5-flash-lite" -> "gemini-3.5-flash-lite (Google)".
+// "groq" -> "gpt-oss-20b (Groq)"; "groq:qwen/qwen3.8-27b" -> "qwen3.8-27b (Groq)";
+// "gemini:gemini-3.5-flash-lite" -> "gemini-3.5-flash-lite (Google)".
 function nombreProveedor(p) {
   if (!p) return "—";
   if (p === "groq") return "gpt-oss-20b (Groq)";
+  if (p.startsWith("groq:")) return `${p.slice(5).split("/").pop()} (Groq)`;
   return p.startsWith("gemini:") ? `${p.slice(7)} (Google)` : p;
 }
 
@@ -308,7 +312,11 @@ function comoFunciona(datos, transcripcion) {
     <summary>Ver cómo funciona</summary>
     <div class="pasos">
       <div><b>1 · pregunta</b>${pregunta}</div>
-      <div><b>2 · modelo</b>${escapar(nombreProveedor(datos.proveedor_llm))} escribe el SQL · ${num(Math.round(t.modelo_ms ?? 0))} ms${intentos}</div>
+      <div><b>2 · modelo</b>${
+        datos.desde_cache
+          ? `${escapar(nombreProveedor(datos.proveedor_llm))} escribió este SQL para una pregunta igual · respuesta guardada, sin gastar cuota del modelo`
+          : `${escapar(nombreProveedor(datos.proveedor_llm))} escribe el SQL · ${num(Math.round(t.modelo_ms ?? 0))} ms${intentos}`
+      }</div>
       <div><b>3 · guardia</b>solo SELECT, usuario de solo lectura, máx. 100 filas</div>
       <div><b>4 · Postgres</b>Neon · ${num(datos.total ?? 0)} filas · ${num(Math.round(t.base_ms ?? 0))} ms</div>
     </div>

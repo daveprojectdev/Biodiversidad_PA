@@ -148,7 +148,8 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
 .dato b { display: block; font-size: 34px; letter-spacing: -.03em; font-weight: 800; line-height: 1.1; }
 .dato span { font: 12px var(--mono); color: var(--gris); }
 
-.pie { margin-top: 40px; display: flex; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; font: 12px/1.6 var(--mono); color: var(--gris); }
+/* Una línea por tema: datos, mapa, autoría, páginas (pedido de David). */
+.pie { margin-top: 40px; display: flex; flex-direction: column; gap: 4px; font: 12px/1.6 var(--mono); color: var(--gris); }
 
 @media (max-width: 860px) {
   .escena { grid-template-columns: minmax(0, 1fr); }
