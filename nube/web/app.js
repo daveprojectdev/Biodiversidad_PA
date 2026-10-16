@@ -277,8 +277,12 @@ async function llenarGaleria(caja) {
 document.addEventListener("click", (ev) => {
   const boton = ev.target.closest(".miniatura");
   if (!boton) return;
-  $("visor-img").src = boton.dataset.grande;
-  $("visor-img").alt = boton.querySelector("img").alt;
+  // La imagen se crea al abrir: en el HTML no queda un <img> sin src.
+  const img = document.createElement("img");
+  img.id = "visor-img";
+  img.src = boton.dataset.grande;
+  img.alt = boton.querySelector("img").alt;
+  $("visor-foto").replaceChildren(img);
   $("visor-credito").textContent = boton.dataset.credito;
   $("visor").showModal();
 });
