@@ -55,7 +55,30 @@ export async function transcribir(clave: string | undefined, audio: ArrayBuffer,
 // ── Salida: síntesis con la voz de Edge ──
 
 export const VOZ = "es-PA-RobertoNeural";
-export const MAX_TEXTO_HABLADO = 400;
+const MAX_FILAS = 100; // el LIMIT que pone sql.ts
+const MAX_VALOR_HABLADO = 80; // un valor más largo no se lee: se dice «1 resultado»
+const NO_HABLABLES = new Set(["occurrence_url", "media_type"]);
+
+/**
+ * La frase que se dice, como formatear_respuesta_hablada de app/app_flask.py.
+ * Se arma aquí, a partir de cuántas filas hubo y de la fila si es una sola,
+ * para que /hablar no lea textos arbitrarios. null si los datos no sirven.
+ */
+export function textoHablado(total: unknown, fila: unknown): string | null {
+  if (typeof total !== "number" || !Number.isInteger(total) || total < 0 || total > MAX_FILAS) return null;
+  if (total === 0) return "No se encontraron resultados para tu pregunta.";
+  if (total > 1) return `Se encontraron ${total} resultados. Revisa la tabla en pantalla para el detalle completo.`;
+  const generico = "Se encontró 1 resultado. Revisa la pantalla para el detalle completo.";
+  if (!fila || typeof fila !== "object" || Array.isArray(fila)) return generico;
+  const valores = Object.entries(fila)
+    .filter(([c, v]) => !NO_HABLABLES.has(c) && v != null)
+    .map(([, v]) => v);
+  const legibles = valores.every(
+    (v) => (typeof v === "string" || typeof v === "number" || typeof v === "boolean") && String(v).length <= MAX_VALOR_HABLADO,
+  );
+  if (valores.length > 0 && valores.length <= 4 && legibles) return `El resultado es: ${valores.map(String).join(", ")}.`;
+  return generico;
+}
 
 const VERSION_CHROMIUM = "143.0.3650.75";
 const MAYOR = VERSION_CHROMIUM.split(".")[0];

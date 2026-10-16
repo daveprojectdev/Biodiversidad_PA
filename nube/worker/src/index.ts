@@ -9,17 +9,17 @@
 // Las respuestas tienen la misma forma que las de Flask, para que el
 // frontend pueda pasar de una a otra.
 // ============================================================
-import { Hono } from "hono";
+import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { secureHeaders } from "hono/secure-headers";
 
 import { resolverColeccion, type Coleccion } from "./colecciones";
 import { consultar, type Fila } from "./db";
-import { LimiteDeConsultas, type Veredicto } from "./limite";
+import { clavePersona, LimiteDeConsultas, type Veredicto } from "./limite";
 import { generarSqlCascada, type EnvLlm } from "./llm";
 import { idDeObservacion, multimediaDe } from "./multimedia";
 import { construirPrompt } from "./prompt";
-import { audioDe, CuotaAgotada, extensionDe, MAX_AUDIO_BYTES, MAX_TEXTO_HABLADO, MODELO_TRANSCRIPCION, transcribir, VOZ } from "./voz";
+import { audioDe, CuotaAgotada, extensionDe, MAX_AUDIO_BYTES, MODELO_TRANSCRIPCION, textoHablado, transcribir, VOZ } from "./voz";
 import { adaptarDialecto, asegurarColumnasMultimedia, calificarTablas, esSqlSeguro, limitarFilas } from "./sql";
 
 export { LimiteDeConsultas };
@@ -40,16 +40,67 @@ app.use("*", (c, next) =>
   cors({ origin: c.env.ORIGENES.split(",").map((o) => o.trim()), allowMethods: ["GET", "POST"] })(c, next),
 );
 
+// ── Solo la página puede llamar a la API desde un navegador ──
+// Sin esto, otra web podía mandar POST «simples» (text/plain, sin preflight
+// de CORS) que gastaban el cupo de cada visitante y el global. Los clientes
+// sin navegador (curl) no mandan Origin y siguen teniendo el límite por persona.
+
+app.use("*", async (c, next) => {
+  if (c.req.method !== "POST") return next();
+  const origen = c.req.header("origin");
+  const permitidos = c.env.ORIGENES.split(",").map((o) => o.trim());
+  if (c.req.header("sec-fetch-site") === "cross-site" || (origen && !permitidos.includes(origen))) {
+    return c.json({ error: "Origen no permitido" }, 403);
+  }
+  return next();
+});
+
+// Cuerpos máximos, revisados antes de leerlos (Cloudflare acepta hasta 100 MB).
+const MAX_JSON_BYTES = 16 * 1024;
+
+function cuerpoDemasiadoGrande(largo: string | undefined, maximo: number): boolean {
+  return largo !== undefined && !(Number(largo) <= maximo);
+}
+
+async function leerJson(c: Context<{ Bindings: Env }>): Promise<Record<string, unknown> | Response> {
+  if (!(c.req.header("content-type") ?? "").toLowerCase().startsWith("application/json")) {
+    return c.json({ error: "Se espera application/json" }, 415);
+  }
+  if (cuerpoDemasiadoGrande(c.req.header("content-length"), MAX_JSON_BYTES)) {
+    return c.json({ error: "La petición es demasiado grande" }, 413);
+  }
+  const texto = await c.req.text();
+  if (texto.length > MAX_JSON_BYTES) return c.json({ error: "La petición es demasiado grande" }, 413);
+  try {
+    const datos = JSON.parse(texto);
+    return datos && typeof datos === "object" && !Array.isArray(datos) ? datos : {};
+  } catch {
+    return {};
+  }
+}
+
 // ── Límite de consultas ──
 
-async function revisarLimite(env: Env, persona: string): Promise<Veredicto> {
-  const propio = await env.LIMITE.getByName(`persona:${persona}`).consumir(
-    Number(env.LIMITE_POR_MINUTO),
-    Number(env.LIMITE_POR_DIA),
-  );
+const persona = (c: Context<{ Bindings: Env }>) => clavePersona(c.req.header("cf-connecting-ip"));
+
+// Límite por persona y, si pasa, el tope diario de todo el sistema para esa ruta.
+async function limitar(
+  env: Env,
+  ruta: string,
+  quien: string,
+  porMinuto: number,
+  porDia: number,
+  globalPorDia: number,
+): Promise<Veredicto> {
+  const propio = await env.LIMITE.getByName(`${ruta}:${quien}`).consumir(porMinuto, porDia);
   if (!propio.permitido) return propio;
-  const global = await env.LIMITE.getByName("global").consumir(0, Number(env.LIMITE_GLOBAL_POR_DIA));
+  const global = await env.LIMITE.getByName(`${ruta}:global`).consumir(0, globalPorDia);
   return global.permitido ? global : { permitido: false, motivo: "global" };
+}
+
+function rechazar(c: Context<{ Bindings: Env }>, limite: Veredicto) {
+  if (limite.reintentarEnSegundos) c.header("Retry-After", String(limite.reintentarEnSegundos));
+  return c.json({ error: MENSAJES_LIMITE[limite.motivo ?? "minuto"] }, 429);
 }
 
 const MENSAJES_LIMITE: Record<string, string> = {
@@ -84,22 +135,32 @@ function detectarConflictoColeccion(pregunta: string, coleccion: Coleccion): str
 
 // ── Ejecutar SQL del modelo (6 y 9b de app_flask.py) ──
 
-type ResultadoSql = { filas: Fila[]; total: number; sql_ejecutado: string } | { error: string };
+// `error` es lo que ve la persona; `detalle`, el error exacto que se le
+// devuelve al modelo para que se corrija (no se muestra: delataba nombres
+// internos y permitía sacar datos por los mensajes de error).
+type ResultadoSql = { filas: Fila[]; total: number; sql_ejecutado: string } | { error: string; detalle: string };
+
+const ERROR_CONSULTA = "No se pudo responder esa pregunta. Prueba a hacerla de otra forma.";
+const MAX_RESPUESTA_BYTES = 1_000_000;
 
 async function ejecutarSql(env: Env, esquema: Coleccion, sql: string): Promise<ResultadoSql> {
   const [ok, motivo] = esSqlSeguro(sql);
   if (!ok) {
     console.warn(`SQL rechazado: ${motivo} | SQL: ${sql.slice(0, 150)}`);
-    return { error: `Consulta no permitida: ${motivo}` };
+    return { error: ERROR_CONSULTA, detalle: `Consulta no permitida: ${motivo}` };
   }
   const sqlFinal = limitarFilas(sql);
   try {
     const filas = await consultar(env.DATABASE_URL, esquema, sqlFinal);
+    if (JSON.stringify(filas).length > MAX_RESPUESTA_BYTES) {
+      console.warn(`Respuesta demasiado grande | SQL: ${sqlFinal.slice(0, 150)}`);
+      return { error: ERROR_CONSULTA, detalle: "El resultado pesa más de 1 MB: devuelve menos columnas o agrupa." };
+    }
     return { filas, total: filas.length, sql_ejecutado: sqlFinal };
   } catch (e) {
     const mensaje = e instanceof Error ? e.message : String(e);
     console.error(`Error Postgres: ${mensaje} | SQL: ${sqlFinal.slice(0, 150)}`);
-    return { error: `Error de base de datos: ${mensaje}` };
+    return { error: ERROR_CONSULTA, detalle: `Error de base de datos: ${mensaje}` };
   }
 }
 
@@ -130,10 +191,10 @@ async function generarYEjecutar(env: Env, pregunta: string, esquema: Coleccion, 
   let intento = 1;
   while ("error" in resultado && intento < maxIntentos) {
     intento += 1;
-    console.warn(`SQL falló, reintentando con el error: ${resultado.error}`);
+    console.warn(`SQL falló, reintentando con el error: ${resultado.detalle}`);
     const correccion =
       `Tu consulta SQL anterior para la pregunta "${pregunta}" falló con este ` +
-      `error real de PostgreSQL:\n${resultado.error}\n\n` +
+      `error real de PostgreSQL:\n${resultado.detalle}\n\n` +
       `SQL que falló:\n${sql}\n\n` +
       `Corrige el SQL para que funcione, respetando el esquema y las reglas ` +
       `del sistema. Responde ÚNICAMENTE con el SQL corregido.`;
@@ -200,7 +261,8 @@ app.get("/explorar", async (c) => {
 });
 
 app.post("/consultar", async (c) => {
-  const datos = await c.req.json().catch(() => ({}) as Record<string, unknown>);
+  const datos = await leerJson(c);
+  if (datos instanceof Response) return datos;
   const pregunta = typeof datos.pregunta === "string" ? datos.pregunta.trim() : "";
   const esquema = resolverColeccion(datos.coleccion);
 
@@ -212,12 +274,15 @@ app.post("/consultar", async (c) => {
   if (conflicto) return c.json({ error: conflicto }, 400);
 
   // Se cuenta después de las validaciones baratas: una pregunta vacía no gasta cupo.
-  const persona = c.req.header("cf-connecting-ip") ?? "local";
-  const limite = await revisarLimite(c.env, persona);
-  if (!limite.permitido) {
-    if (limite.reintentarEnSegundos) c.header("Retry-After", String(limite.reintentarEnSegundos));
-    return c.json({ error: MENSAJES_LIMITE[limite.motivo ?? "minuto"] }, 429);
-  }
+  const limite = await limitar(
+    c.env,
+    "persona",
+    persona(c),
+    Number(c.env.LIMITE_POR_MINUTO),
+    Number(c.env.LIMITE_POR_DIA),
+    Number(c.env.LIMITE_GLOBAL_POR_DIA),
+  );
+  if (!limite.permitido) return rechazar(c, limite);
 
   const { llm, sql, resultado, intentos, tiempos } = await generarYEjecutar(c.env, pregunta, esquema);
   if (!resultado) {
@@ -237,7 +302,7 @@ app.post("/consultar", async (c) => {
     proveedor_llm: proveedor,
     intentos,
     tiempos,
-    ...resultado,
+    ...("error" in resultado ? { error: resultado.error } : resultado),
   });
 });
 
@@ -245,9 +310,8 @@ app.post("/consultar", async (c) => {
 app.get("/multimedia", async (c) => {
   const id = idDeObservacion(c.req.query("url"));
   if (!id) return c.json({ error: "Solo se aceptan observaciones de iNaturalist" }, 400);
-  const persona = c.req.header("cf-connecting-ip") ?? "local";
-  const limite = await c.env.LIMITE.getByName(`multimedia:${persona}`).consumir(60, 600);
-  if (!limite.permitido) return c.json({ error: MENSAJES_LIMITE[limite.motivo ?? "minuto"] }, 429);
+  const limite = await limitar(c.env, "multimedia", persona(c), 60, 600, 20_000);
+  if (!limite.permitido) return rechazar(c, limite);
   try {
     return c.json(await multimediaDe(id, c.executionCtx));
   } catch (e) {
@@ -263,19 +327,15 @@ app.get("/multimedia", async (c) => {
 app.post("/transcribir", async (c) => {
   const extension = extensionDe(c.req.header("content-type"));
   if (!extension) return c.json({ error: "Formato de audio no admitido" }, 415);
+  if (cuerpoDemasiadoGrande(c.req.header("content-length"), MAX_AUDIO_BYTES)) {
+    return c.json({ error: "La grabación es demasiado larga" }, 413);
+  }
   const audio = await c.req.arrayBuffer();
   if (!audio.byteLength) return c.json({ error: "Falta el audio" }, 400);
   if (audio.byteLength > MAX_AUDIO_BYTES) return c.json({ error: "La grabación es demasiado larga" }, 413);
 
-  const persona = c.req.header("cf-connecting-ip") ?? "local";
-  const propio = await c.env.LIMITE.getByName(`transcribir:${persona}`).consumir(10, 100);
-  const limite = propio.permitido
-    ? await c.env.LIMITE.getByName("transcribir:global").consumir(0, 1500)
-    : propio;
-  if (!limite.permitido) {
-    if (limite.reintentarEnSegundos) c.header("Retry-After", String(limite.reintentarEnSegundos));
-    return c.json({ error: MENSAJES_LIMITE[propio.permitido ? "global" : (limite.motivo ?? "minuto")] }, 429);
-  }
+  const limite = await limitar(c.env, "transcribir", persona(c), 10, 100, 1500);
+  if (!limite.permitido) return rechazar(c, limite);
 
   const t0 = Date.now();
   try {
@@ -292,16 +352,18 @@ app.post("/transcribir", async (c) => {
   }
 });
 
-// Devuelve el MP3. Si Microsoft no responde, 503 y la página usa la voz del navegador.
+// Recibe cuántas filas trajo la respuesta (y la fila, si es una sola) y
+// arma aquí la frase, como /hablar en Flask: no lee cualquier texto, así que
+// no sirve de lector de voz gratis. Devuelve el MP3; si Microsoft no
+// responde, 503 y la página usa la voz del navegador.
 app.post("/hablar", async (c) => {
-  const datos = await c.req.json().catch(() => ({}) as Record<string, unknown>);
-  const texto = typeof datos.texto === "string" ? datos.texto.trim() : "";
-  if (!texto) return c.json({ error: "Falta el campo 'texto'" }, 400);
-  if (texto.length > MAX_TEXTO_HABLADO) return c.json({ error: "El texto es demasiado largo" }, 400);
+  const datos = await leerJson(c);
+  if (datos instanceof Response) return datos;
+  const texto = textoHablado(datos.total, datos.fila);
+  if (!texto) return c.json({ error: "Se espera {total, fila}" }, 400);
 
-  const persona = c.req.header("cf-connecting-ip") ?? "local";
-  const limite = await c.env.LIMITE.getByName(`hablar:${persona}`).consumir(20, 200);
-  if (!limite.permitido) return c.json({ error: MENSAJES_LIMITE[limite.motivo ?? "minuto"] }, 429);
+  const limite = await limitar(c.env, "hablar", persona(c), 20, 200, 3000);
+  if (!limite.permitido) return rechazar(c, limite);
 
   const t0 = Date.now();
   try {

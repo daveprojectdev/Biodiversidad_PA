@@ -15,7 +15,7 @@ respuesta que la app de Flask.
 | `POST /consultar` `{pregunta, coleccion}` | Pregunta → SQL → filas, con `tiempos` (modelo y base, en ms) e `intentos` |
 | `GET /multimedia?url=<observación de iNaturalist>` | Fotos y audios con licencia CC de esa observación, con crédito; caché de un día y 60 por minuto por persona |
 | `POST /transcribir` (cuerpo: el audio, `Content-Type` `audio/webm`, `audio/mp4`, `audio/ogg`, `audio/mpeg` o `audio/wav`; hasta 2 MB) | Texto de la pregunta hablada, con Groq `whisper-large-v3-turbo` en español: `{texto, modelo, ms}` |
-| `POST /hablar` `{texto}` (hasta 400 caracteres) | MP3 con la voz `es-PA-RobertoNeural`; `X-Voz-Cache: hit` si salió de la caché. Si Microsoft no responde, 503 |
+| `POST /hablar` `{total, fila}` (cuántas filas trajo la respuesta y la fila si es una sola) | Arma la frase y devuelve el MP3 con la voz `es-PA-RobertoNeural`; `X-Voz-Cache: hit` si salió de la caché. No acepta texto libre. Si Microsoft no responde, 503 |
 
 `coleccion` acepta `amphibia` (como el frontend entregado), `anfibios` o `aves`.
 
@@ -102,9 +102,10 @@ Lo que en la app de Flask hacían faster-whisper y edge-tts en el mismo equipo:
   al día en todo el sistema, debajo de la cuota de Groq); `/hablar` 20 por
   minuto y 200 por día.
 
-El texto que se dice es el de `formatear_respuesta_hablada` de la app
-(`textoHablado` en `nube/web/app.js`): un resultado de hasta 4 campos se lee
-entero; si no, solo cuántos resultados hay.
+El texto que se dice es el de `formatear_respuesta_hablada` de la app, armado
+en el Worker (`textoHablado` en `voz.ts`): un resultado de hasta 4 campos, de
+hasta 80 caracteres cada uno, se lee entero; si no, solo cuántos resultados
+hay. La página tiene una copia de esa función solo para la voz del navegador.
 
 ## En producción
 
@@ -112,9 +113,44 @@ El Worker está desplegado en la cuenta de Cloudflare de biodiversidad sin
 dirección pública propia; lo usa Pages, que sirve el sitio en
 https://biodiversidad.davidameth.dev. Cómo se publica, en `nube/pages/README.md`.
 
+## Seguridad (revisión del 2026-10-16)
+
+Una revisión de seguridad del 2026-10-16 no encontró nada crítico ni alto y
+comprobó en producción que la base aguanta una inyección en la pregunta: el
+modelo obedece, pero el rol es de solo lectura, la transacción también y cada
+consulta corta a los 10 s. Lo que se arregló:
+
+- **Límite por persona:** con IPv6 cuenta el bloque /64 entero, no la
+  dirección (`clavePersona` en `limite.ts`). Cada ruta tiene además su tope
+  diario global (`/multimedia` 20.000, `/hablar` 3.000, `/transcribir` 1.500)
+  y cada contador se borra solo tras 48 h sin uso.
+- **Solo la página:** los POST que vienen de otro sitio (`Origin` fuera de
+  `ORIGENES` o `Sec-Fetch-Site: cross-site`) reciben 403, y `/consultar` y
+  `/hablar` exigen `application/json`. Antes, otra web podía gastar el cupo de
+  sus visitantes con un POST `text/plain`.
+- **Tamaños:** el cuerpo se mide antes de leerlo (16 KB para JSON, 2 MB para
+  audio) y una respuesta de más de 1 MB no se devuelve.
+- **Filas:** el `LIMIT` del modelo vale solo si es el único, va al final y no
+  pasa de 100; si no, la consulta se envuelve en otra con `LIMIT 100`. Antes
+  un `LIMIT 1000000` o uno en una subconsulta dejaba salir tablas enteras.
+- **Funciones bloqueadas** (`sql.ts`): `query_to_xml` y familia, `xpath`,
+  `information_schema`, `current_setting`, `repeat`, `lpad`, `rpad`,
+  `generate_series`, `chr`, `version` y otras: ninguna pregunta las necesita y
+  servían para ejecutar SQL armado como texto o para inflar la base.
+- **Errores:** la persona ve «No se pudo responder esa pregunta. Prueba a
+  hacerla de otra forma.»; el error exacto de Postgres solo va al registro y
+  al modelo, para que se corrija.
+- **Rol lector:** `work_mem` de 8 MB. Neon no deja fijar `temp_file_limit`.
+- **`/hablar`** ya no lee texto libre (ver arriba): no sirve de lector de voz
+  gratis.
+
+Queda abierto: `biodiversidad.pages.dev` también sirve la API (mismo
+límite); el plan de la cuenta de Cloudflare define cuántas peticiones a
+Durable Objects hay al día (100.000 en el gratis).
+
 ## Límites y cuotas
 
-- Por persona (IP): 15 consultas por minuto (como `/consultar` en Flask) y 60
+- Por persona (IP, o su bloque /64 si es IPv6): 15 consultas por minuto (como `/consultar` en Flask) y 60
   por día. Tope de todo el sistema: 800 por día. Se cambian en `wrangler.jsonc`.
 - **Las cuotas gratis son el cuello de botella** (medido el 2026-10-15/16).
   Cada pregunta gasta de 3.000 a 5.500 tokens, casi todo el prompt (el glosario

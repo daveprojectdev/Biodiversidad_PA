@@ -37,6 +37,9 @@ el de la versión entregada y no se toca.
   `nube/worker/README.md`.
 - La CSP permite `blob:` en `media-src`: el MP3 de Roberto se reproduce desde
   la memoria del navegador.
+- Cabeceras de la página (`_headers`): además de la CSP, `Strict-Transport-Security`
+  y `Permissions-Policy` (micrófono solo para la propia página; cámara y
+  ubicación, nunca).
 - Mascotas, pedidas por David: con Anfibios, la rana de ojos rojos (*Agalychnis
   callidryas*) en su nenúfar (se probó la rana dorada y David prefirió esta);
   con Aves, un tucán pico iris (*Ramphastos sulfuratus*, el tucán más avistado:

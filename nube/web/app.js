@@ -181,7 +181,7 @@ function frase(datos, filas, colProv, colNum) {
       const total = filas.reduce((s, f) => s + f[colNum], 0);
       const mayor = filas.reduce((a, b) => (b[colNum] > a[colNum] ? b : a));
       const parte = total ? Math.round((100 * mayor[colNum]) / total) : 0;
-      return `${n} provincia${n === 1 ? "" : "s"} en la respuesta. La de más ${etiqueta(colNum).toLowerCase()}: <b>${escapar(mayor[colProv])}</b>, con ${num(mayor[colNum])}${n > 1 ? ` (el ${parte} %)` : ""}.`;
+      return `${n} provincia${n === 1 ? "" : "s"} en la respuesta. La de más ${escapar(etiqueta(colNum).toLowerCase())}: <b>${escapar(mayor[colProv])}</b>, con ${num(mayor[colNum])}${n > 1 ? ` (el ${parte} %)` : ""}.`;
     }
     return `Aparece en <b>${n} provincia${n === 1 ? "" : "s"}</b>.`;
   }
@@ -487,7 +487,7 @@ async function cambiarColeccion(coleccion, limpiar = true) {
 
 const MAX_GRABACION_MS = 30_000;
 const MIN_GRABACION_MS = 700; // menos que esto es un toque sin querer
-const MAX_TEXTO_HABLADO = 400; // el mismo tope que el Worker
+const MAX_VALOR_HABLADO = 80; // como textoHablado en nube/worker/src/voz.ts
 const ESTADO_CAJA = "texto o voz · en español";
 const Reconocimiento = window.SpeechRecognition || window.webkitSpeechRecognition;
 const puedeGrabar = Boolean(navigator.mediaDevices?.getUserMedia && window.MediaRecorder);
@@ -618,9 +618,9 @@ function textoHablado(filas) {
   if (filas.length === 1) {
     const valores = Object.entries(filas[0])
       .filter(([c, v]) => !OCULTAS.has(c) && v != null)
-      .map(([, v]) => String(v));
-    const texto = `El resultado es: ${valores.join(", ")}.`;
-    if (valores.length > 0 && valores.length <= 4 && texto.length <= MAX_TEXTO_HABLADO) return texto;
+      .map(([, v]) => v);
+    const legibles = valores.every((v) => ["string", "number", "boolean"].includes(typeof v) && String(v).length <= MAX_VALOR_HABLADO);
+    if (valores.length > 0 && valores.length <= 4 && legibles) return `El resultado es: ${valores.map(String).join(", ")}.`;
     return "Se encontró 1 resultado. Revisa la pantalla para el detalle completo.";
   }
   return `Se encontraron ${filas.length} resultados. Revisa la tabla en pantalla para el detalle completo.`;
@@ -654,14 +654,16 @@ function detenerVoz() {
 async function escuchar(entrada) {
   detenerVoz();
   sonando = entrada;
-  const texto = textoHablado(entrada.datos.filas ?? []);
+  const filas = entrada.datos.filas ?? [];
+  const texto = textoHablado(filas); // la misma frase, para la voz del navegador si /hablar falla
   if (!entrada.audio) {
     estadoEscuchar("Preparando la voz…", true);
     try {
       const r = await fetch("/hablar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ texto }),
+        // El Worker arma la frase con esto (no acepta texto libre).
+        body: JSON.stringify({ total: filas.length, fila: filas.length === 1 ? filas[0] : undefined }),
       });
       if (r.ok && r.headers.get("content-type")?.startsWith("audio/")) entrada.audio = URL.createObjectURL(await r.blob());
     } catch {}

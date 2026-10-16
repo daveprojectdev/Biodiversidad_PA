@@ -16,6 +16,15 @@ const PALABRAS_PROHIBIDAS = [
 ];
 // Solo como palabra completa: «CALL» suelto bloquearía '%callidryas%'.
 const PALABRAS_SUELTAS = ["DO", "SET", "CALL", "COPY"];
+// Funciones que ninguna pregunta sobre avistamientos necesita y que sirven
+// para atacar: ejecutar SQL armado como texto (saltándose esta lista),
+// leer el catálogo o inflar memoria y tiempo de la base.
+const FUNCIONES_PROHIBIDAS = [
+  "QUERY_TO_XML", "QUERY_TO_XML_AND_XMLSCHEMA", "QUERY_TO_XMLSCHEMA", "CURSOR_TO_XML",
+  "CURSOR_TO_XMLSCHEMA", "TABLE_TO_XML", "SCHEMA_TO_XML", "DATABASE_TO_XML", "XPATH",
+  "XMLPARSE", "INFORMATION_SCHEMA", "CURRENT_SETTING", "DBLINK", "LO_IMPORT", "LO_GET",
+  "REPEAT", "LPAD", "RPAD", "GENERATE_SERIES", "VERSION", "CHR",
+];
 
 export function esSqlSeguro(sql: string): [boolean, string] {
   if (!sql || !sql.trim()) return [false, "SQL vacío"];
@@ -26,16 +35,24 @@ export function esSqlSeguro(sql: string): [boolean, string] {
   for (const palabra of PALABRAS_PROHIBIDAS) {
     if (arriba.includes(palabra)) return [false, `Palabra prohibida detectada: ${palabra}`];
   }
-  for (const palabra of PALABRAS_SUELTAS) {
+  for (const palabra of [...PALABRAS_SUELTAS, ...FUNCIONES_PROHIBIDAS]) {
     if (new RegExp(`\\b${palabra}\\b`).test(arriba)) return [false, `Palabra prohibida detectada: ${palabra}`];
   }
   return [true, "OK"];
 }
 
+// Tope de filas. Antes, cualquier LIMIT en el texto (uno de 1.000.000, o
+// uno dentro de una subconsulta) dejaba pasar tablas enteras. Ahora el
+// LIMIT del modelo se respeta solo si es el único, va al final y no pasa
+// del tope; si no hay ninguno se agrega, y en cualquier otro caso la
+// consulta se envuelve en otra con el tope.
 export function limitarFilas(sql: string, maxFilas = 100): string {
   const limpio = sql.trim().replace(/;+\s*$/, "");
-  if (/\bLIMIT\s+\d+/i.test(limpio)) return limpio;
-  return `${limpio} LIMIT ${maxFilas}`;
+  const limites = limpio.match(/\b(LIMIT|FETCH|OFFSET)\b/gi) ?? [];
+  if (!limites.length) return `${limpio} LIMIT ${maxFilas}`;
+  const final = /\bLIMIT\s+(\d+)\s*$/i.exec(limpio);
+  if (limites.length === 1 && final && Number(final[1]) <= maxFilas) return limpio;
+  return `SELECT * FROM (\n${limpio}\n) AS consulta LIMIT ${maxFilas}`;
 }
 
 // Sección 5b — antepone el esquema a cada tabla, para que el SQL que se

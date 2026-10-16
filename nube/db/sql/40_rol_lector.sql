@@ -28,6 +28,11 @@ GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA {{esquema}} TO biodiv_lector;
 ALTER ROLE biodiv_lector SET default_transaction_read_only = on;
 ALTER ROLE biodiv_lector SET statement_timeout = '10s';
 ALTER ROLE biodiv_lector SET idle_in_transaction_session_timeout = '30s';
+-- Memoria por operación acotada (revisión de seguridad del 2026-10-16):
+-- un producto cartesiano pedido por inyección no infla el cómputo. Neon no
+-- deja fijar temp_file_limit (hace falta superusuario); el tope de disco
+-- queda a cargo de los 10 s.
+ALTER ROLE biodiv_lector SET work_mem = '8MB';
 -- Colección por defecto: anfibios, como en app_flask.py. Para aves,
 -- la app hace SET search_path = aves, public en cada conexión.
 ALTER ROLE biodiv_lector SET search_path = anfibios, public;
