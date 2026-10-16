@@ -526,7 +526,7 @@ let temaGuardado = "sistema";
 try {
   temaGuardado = localStorage.getItem("tema") || "sistema";
 } catch {}
-aplicarTema(temaGuardado);
+aplicarTema(new URLSearchParams(location.search).get("tema")?.match(/^(claro|oscuro)$/)?.[0] ?? temaGuardado);
 document.querySelectorAll(".tema button").forEach((b) =>
   b.addEventListener("click", () => {
     aplicarTema(b.dataset.tema);
