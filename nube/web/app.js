@@ -461,7 +461,7 @@ for (const id of ["rana", "ave"]) {
     m.classList.add("salta");
   });
   m.addEventListener("animationend", (ev) => {
-    if (ev.animationName.startsWith("salto")) m.classList.remove("salta");
+    if (ev.animationName === "salto-rana" || ev.animationName === "vuelo-corto") m.classList.remove("salta");
   });
 }
 

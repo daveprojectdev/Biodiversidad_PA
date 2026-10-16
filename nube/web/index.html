@@ -55,7 +55,7 @@
       <div class="mapa-envoltura">
         <div class="mapa" id="mapa"></div>
         <!-- Mascotas: una por colección, flotando en el Pacífico del mapa. -->
-        <button type="button" class="mascota rana" id="rana" title="Rana de ojos rojos (Agalychnis callidryas)" aria-label="Rana de ojos rojos: tócala para que salte">
+        <button type="button" class="mascota rana" id="rana" title="Rana dorada (Atelopus zeteki), símbolo de Panamá" aria-label="Rana dorada: tócala para que salte">
           <svg viewBox="0 0 200 160" aria-hidden="true">
             <g class="ondas">
               <ellipse cx="100" cy="134" rx="70" ry="13" />
@@ -67,24 +67,33 @@
               <path class="nervios" d="M100 128 L52 121 M100 128 L60 139 M100 128 L118 143 M100 128 L146 141" />
               <ellipse class="flor" cx="150" cy="117" rx="7" ry="5" />
               <g class="cuerpo-rana">
-                <ellipse class="pata-tras" cx="68" cy="119" rx="17" ry="9" />
-                <ellipse class="pata-tras" cx="132" cy="119" rx="17" ry="9" />
-                <circle class="dedos" cx="54" cy="124" r="4" /><circle class="dedos" cx="146" cy="124" r="4" />
-                <ellipse class="tronco" cx="100" cy="106" rx="35" ry="24" />
-                <ellipse class="costado" cx="70" cy="107" rx="5" ry="10" />
-                <ellipse class="costado" cx="130" cy="107" rx="5" ry="10" />
-                <ellipse class="barriga" cx="100" cy="113" rx="20" ry="14" />
-                <circle class="dedos" cx="84" cy="126" r="4.5" /><circle class="dedos" cx="116" cy="126" r="4.5" />
-                <ellipse class="garganta" cx="100" cy="98" rx="14" ry="7" />
-                <ellipse class="cabeza" cx="100" cy="86" rx="31" ry="18" />
-                <path class="boca" d="M84 93 Q100 101 116 93" />
-                <g class="ojo"><circle cx="82" cy="73" r="11" /><ellipse class="pupila" cx="82" cy="73" rx="2.6" ry="7.5" /><ellipse class="parpado" cx="82" cy="73" rx="11.5" ry="11.5" /></g>
-                <g class="ojo"><circle cx="118" cy="73" r="11" /><ellipse class="pupila" cx="118" cy="73" rx="2.6" ry="7.5" /><ellipse class="parpado" cx="118" cy="73" rx="11.5" ry="11.5" /></g>
+                <path class="pata" d="M80 110 C60 104 46 118 56 128 C63 134 77 130 86 123 Z" />
+                <path class="pata" d="M120 110 C140 104 154 118 144 128 C137 134 123 130 114 123 Z" />
+                <path class="dedos" d="M57 128 L43 131 M57 128 L45 124 M58 129 L50 136 M143 128 L157 131 M143 128 L155 124 M142 129 L150 136" />
+                <ellipse class="tronco" cx="100" cy="106" rx="25" ry="22" />
+                <ellipse class="mancha" cx="91" cy="101" rx="4" ry="3" />
+                <ellipse class="mancha" cx="109" cy="108" rx="3.6" ry="2.6" />
+                <ellipse class="mancha" cx="98" cy="116" rx="3" ry="2" />
+                <ellipse class="mancha" cx="112" cy="97" rx="2.6" ry="2" />
+                <path class="brazo" d="M86 103 C81 113 81 121 83 127" />
+                <path class="dedos" d="M83 127 L77 131 M83 127 L83 133 M83 127 L89 131" />
+                <ellipse class="cabeza" cx="100" cy="84" rx="23" ry="15" />
+                <ellipse class="cabeza" cx="100" cy="91" rx="13" ry="7" />
+                <ellipse class="mancha" cx="92" cy="85" rx="2.4" ry="1.8" />
+                <ellipse class="mancha" cx="109" cy="87" rx="2" ry="1.5" />
+                <path class="boca" d="M90 94 Q100 99 110 94" />
+                <g class="ojo"><circle class="iris" cx="89" cy="76" r="6.8" /><circle class="pupila" cx="89" cy="76" r="4.9" /><circle class="brillo" cx="90.7" cy="74.3" r="1.5" /><ellipse class="parpado" cx="89" cy="76" rx="7.3" ry="7.3" /></g>
+                <g class="ojo"><circle class="iris" cx="111" cy="76" r="6.8" /><circle class="pupila" cx="111" cy="76" r="4.9" /><circle class="brillo" cx="112.7" cy="74.3" r="1.5" /><ellipse class="parpado" cx="111" cy="76" rx="7.3" ry="7.3" /></g>
+                <!-- El brazo que saluda: la rana dorada es famosa por «hacer señas». -->
+                <g class="brazo-saluda">
+                  <path class="brazo" d="M114 103 C119 113 119 121 117 127" />
+                  <path class="dedos" d="M117 127 L111 131 M117 127 L117 133 M117 127 L123 131" />
+                </g>
               </g>
             </g>
           </svg>
         </button>
-        <button type="button" class="mascota ave" id="ave" title="Tirano tropical (Tyrannus melancholicus), el ave más avistada" aria-label="Tirano tropical: tócalo para que salte">
+        <button type="button" class="mascota ave" id="ave" title="Tirano tropical (Tyrannus melancholicus), el ave más avistada" aria-label="Tirano tropical: tócalo para que vuele">
           <svg viewBox="0 0 200 160" aria-hidden="true">
             <g class="rama">
               <path class="madera" d="M8 132 C60 126 120 124 194 112" />
@@ -97,7 +106,7 @@
                 <path class="patas" d="M98 124 L95 129 M110 124 L112 128" />
                 <ellipse class="lomo" cx="102" cy="100" rx="25" ry="28" transform="rotate(-18 102 100)" />
                 <ellipse class="pecho" cx="110" cy="106" rx="16" ry="22" transform="rotate(-18 110 106)" />
-                <ellipse class="ala" cx="94" cy="100" rx="13" ry="22" transform="rotate(-22 94 100)" />
+                <g class="ala-g"><ellipse class="ala" cx="94" cy="100" rx="13" ry="22" transform="rotate(-22 94 100)" /></g>
                 <g class="cabeza-ave">
                   <circle class="craneo" cx="117" cy="68" r="17" />
                   <path class="garganta-ave" d="M108 80 Q120 88 131 76 L128 70 Z" />
