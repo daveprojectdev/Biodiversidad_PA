@@ -16,8 +16,9 @@
   --c3: #56b088;
   --c4: #0e8a57;
 }
-/* Ámbar, elegido por David: va con el pico del tucán y las aves de Panamá. */
-[data-coleccion="aves"] {
+/* Ámbar, elegido por David: va con el pico del tucán y las aves de Panamá.
+   Solo en la raíz: el botón «Aves» también lleva data-coleccion. */
+:root[data-coleccion="aves"] {
   --c: #9a5a05;
   --c1: #fbe8c2;
   --c2: #f2c877;
@@ -253,3 +254,77 @@ pre { margin-top: 10px; font: 12.5px/1.6 var(--mono); background: var(--tinta); 
   .mascota, .mascota * { animation: none !important; }
   .rana .parpado, .ave .parpado-ave { transform: scaleY(0); }
 }
+
+/* ── Modo oscuro ──
+   Sigue al sistema; el selector de la cabecera lo fija en claro u oscuro
+   (data-tema en <html>, lo pone tema.js antes de pintar). En el mapa,
+   más = más brillante. Todo el texto pasa de 7:1 de contraste. */
+:root[data-tema="oscuro"] {
+    --fondo: #0e1214;
+    --blanco: #171c1f;
+    --tinta: #eef1ee;
+    --gris: #a2abb0;
+    --linea: #2a3236;
+    --mar: #13222b;
+    --vacio: #1d2a31;
+    --c: #5fd497;
+    --c1: #1f4a36;
+    --c2: #2c7a52;
+    --c3: #3fae73;
+    --c4: #6fe0a0;
+    color-scheme: dark;
+  }
+:root[data-tema="oscuro"][data-coleccion="aves"] {
+    --c: #f0b23c;
+    --c1: #4a3410;
+    --c2: #8a5b12;
+    --c3: #d08c1c;
+    --c4: #ffc44d;
+  }
+:root[data-tema="oscuro"] .mapa path { stroke: #0e1214; }
+:root[data-tema="oscuro"] .mapa text { fill: #f4f6f4; stroke: rgba(10, 13, 15, .92); }
+:root[data-tema="oscuro"] .pestanas button[aria-pressed="true"], :root[data-tema="oscuro"] .tema button[aria-pressed="true"] { color: #0e1214; }
+:root[data-tema="oscuro"] .btn.pri { color: #0e1214; }
+:root[data-tema="oscuro"] pre { background: #0a0d0f; border: 1px solid var(--linea); }
+:root[data-tema="oscuro"] .rana .ondas ellipse { stroke: rgba(255, 255, 255, .45); }
+:root[data-tema="oscuro"] .respuesta .error { color: #ff8a7a; }
+:root[data-tema="oscuro"] .ave .lomo, :root[data-tema="oscuro"] .ave .craneo, :root[data-tema="oscuro"] .ave .cola, :root[data-tema="oscuro"] .ave .ala { stroke: rgba(238, 241, 238, .55); stroke-width: 1.3; paint-order: stroke; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+      --fondo: #0e1214;
+      --blanco: #171c1f;
+      --tinta: #eef1ee;
+      --gris: #a2abb0;
+      --linea: #2a3236;
+      --mar: #13222b;
+      --vacio: #1d2a31;
+      --c: #5fd497;
+      --c1: #1f4a36;
+      --c2: #2c7a52;
+      --c3: #3fae73;
+      --c4: #6fe0a0;
+      color-scheme: dark;
+    }
+  :root:not([data-tema="claro"])[data-coleccion="aves"] {
+      --c: #f0b23c;
+      --c1: #4a3410;
+      --c2: #8a5b12;
+      --c3: #d08c1c;
+      --c4: #ffc44d;
+    }
+  :root:not([data-tema="claro"]) .mapa path { stroke: #0e1214; }
+  :root:not([data-tema="claro"]) .mapa text { fill: #f4f6f4; stroke: rgba(10, 13, 15, .92); }
+  :root:not([data-tema="claro"]) .pestanas button[aria-pressed="true"], :root:not([data-tema="claro"]) .tema button[aria-pressed="true"] { color: #0e1214; }
+  :root:not([data-tema="claro"]) .btn.pri { color: #0e1214; }
+  :root:not([data-tema="claro"]) pre { background: #0a0d0f; border: 1px solid var(--linea); }
+  :root:not([data-tema="claro"]) .rana .ondas ellipse { stroke: rgba(255, 255, 255, .45); }
+  :root:not([data-tema="claro"]) .respuesta .error { color: #ff8a7a; }
+  :root:not([data-tema="claro"]) .ave .lomo, :root:not([data-tema="claro"]) .ave .craneo, :root:not([data-tema="claro"]) .ave .cola, :root:not([data-tema="claro"]) .ave .ala { stroke: rgba(238, 241, 238, .55); stroke-width: 1.3; paint-order: stroke; }
+}
+
+/* Selector de tema: claro, oscuro, sistema. */
+.controles { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.tema { display: flex; gap: 2px; background: var(--blanco); border: 1px solid var(--linea); border-radius: 12px; padding: 4px; }
+.tema button { border: 0; background: transparent; width: 34px; height: 32px; border-radius: 9px; color: var(--gris); cursor: pointer; display: grid; place-items: center; }
+.tema button[aria-pressed="true"] { background: var(--c); color: #fff; }
+.tema svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

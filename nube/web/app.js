@@ -516,6 +516,26 @@ $("pregunta").addEventListener("keydown", (ev) => {
   }
 });
 
+// Tema: claro, oscuro o como el sistema (tema.js ya lo aplicó al cargar).
+function aplicarTema(tema) {
+  if (tema === "claro" || tema === "oscuro") document.documentElement.dataset.tema = tema;
+  else delete document.documentElement.dataset.tema;
+  document.querySelectorAll(".tema button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tema === tema)));
+}
+let temaGuardado = "sistema";
+try {
+  temaGuardado = localStorage.getItem("tema") || "sistema";
+} catch {}
+aplicarTema(temaGuardado);
+document.querySelectorAll(".tema button").forEach((b) =>
+  b.addEventListener("click", () => {
+    aplicarTema(b.dataset.tema);
+    try {
+      localStorage.setItem("tema", b.dataset.tema);
+    } catch {}
+  }),
+);
+
 // Mascotas: un clic y saltan.
 for (const id of ["rana", "ave"]) {
   const m = $(id);

@@ -35,7 +35,11 @@ el de la versión entregada y no se toca.
   9 s. Con un clic, la rana da un salto grande y el ave un vuelo corto. Son SVG
   en `index.html`, animadas solo con transform y opacity, y se quedan quietas
   con «reducir movimiento».
-- Sin dependencias ni paso de compilación: `index.html`, `estilos.css`, `app.js`.
+- Modo oscuro: sigue al sistema; el selector de la cabecera (claro, oscuro,
+  sistema) lo fija y se recuerda en el navegador. `tema.js` lo aplica antes de
+  pintar, sin destello. En el mapa oscuro, más = más brillante; el tucán lleva
+  un contorno claro para no perderse en el mar. Todo el texto pasa de 7:1.
+- Sin dependencias ni paso de compilación: `index.html`, `estilos.css`, `app.js`, `tema.js`.
 
 ## El mapa
 
