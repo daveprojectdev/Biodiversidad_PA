@@ -84,31 +84,42 @@
             </g>
           </svg>
         </button>
-        <button type="button" class="mascota ave" id="ave" title="Tirano tropical (Tyrannus melancholicus), el ave más avistada" aria-label="Tirano tropical: tócalo para que vuele">
+        <button type="button" class="mascota ave" id="ave" title="Tucán pico iris (Ramphastos sulfuratus), el tucán más avistado" aria-label="Tucán pico iris: tócalo para que vuele">
           <svg viewBox="0 0 200 160" aria-hidden="true">
+            <defs>
+              <clipPath id="pico-tucan"><path d="M116 44 C136 37 163 39 180 52 C171 56 142 58 118 58 Z" /></clipPath>
+            </defs>
             <g class="rama">
               <path class="madera" d="M8 132 C60 126 120 124 194 112" />
               <path class="ramita" d="M150 119 C160 106 168 100 178 96" />
               <ellipse class="hoja" cx="182" cy="92" rx="11" ry="5" transform="rotate(-25 182 92)" />
               <ellipse class="hoja" cx="24" cy="138" rx="12" ry="5" transform="rotate(18 24 138)" />
               <ellipse class="hoja" cx="40" cy="122" rx="10" ry="4.5" transform="rotate(-30 40 122)" />
-              <!-- Erguido y esbelto, como un mosquero: cola larga con muesca y el
-                   amarillo en el pecho y la panza, al frente. -->
+              <!-- Tucán pico iris: negro, babero amarillo con borde rojo, rojo bajo
+                   la cola, anillo verde en el ojo y el pico verde, naranja y rojo. -->
               <g class="pajaro">
-                <path class="cola" d="M101 106 L84 150 L90 153 L95 146 L99 152 L108 110 Z" />
-                <path class="patas" d="M108 121 L106 127 M116 121 L118 127" />
-                <path class="lomo" d="M113 56 C99 60 93 76 93 94 C93 111 100 122 110 124 C121 124 128 112 128 95 C128 79 124 64 113 56 Z" />
-                <path class="pecho" d="M119 72 C127 83 130 102 124 115 C120 122 113 124 107 122 C106 107 109 89 114 75 Z" />
+                <path class="cola" d="M92 108 L82 152 L97 152 L103 112 Z" />
+                <path class="patas" d="M100 121 L97 128 M109 121 L111 128" />
+                <path class="lomo" d="M104 48 C89 53 85 72 85 92 C85 110 91 122 101 124 C112 124 119 112 119 94 C119 76 117 57 104 48 Z" />
+                <path class="rojo" d="M95 117 C99 124 108 124 112 119 C107 114 100 114 95 117 Z" />
+                <path class="babero" d="M107 56 C117 59 121 73 118 86 C112 92 104 92 99 86 C99 73 101 63 107 56 Z" />
+                <path class="rojo" d="M99 86 C104 92 112 92 118 86 L117.5 90 C112 96 104 96 99.5 90 Z" />
                 <g class="ala-g">
-                  <path class="ala" d="M103 79 C95 92 95 110 103 122 C111 115 113 97 110 82 Z" />
-                  <path class="plumas" d="M100 97 L108 100 M100 105 L108 108 M101 113 L108 115" />
+                  <path class="ala" d="M92 72 C85 87 87 108 96 121 C103 112 103 91 99 76 Z" />
+                  <path class="plumas" d="M90 95 L98 98 M90 103 L98 106 M91 111 L98 113" />
                 </g>
                 <g class="cabeza-ave">
-                  <circle class="craneo" cx="115" cy="54" r="14" />
-                  <path class="garganta-ave" d="M109 62 Q118 70 127 60 L125 57 Q117 61 109 59 Z" />
-                  <path class="antifaz" d="M103 52 Q115 48 127 52 L127 56 Q115 54 103 57 Z" />
-                  <path class="pico" d="M125 51 L142 55 L125 59 Z" />
-                  <g class="ojo-ave"><circle cx="119" cy="53.5" r="2.7" /><circle class="brillo" cx="119.9" cy="52.6" r="0.9" /><ellipse class="parpado-ave" cx="119" cy="53.5" rx="3.3" ry="3.3" /></g>
+                  <circle class="craneo" cx="106" cy="52" r="13" />
+                  <path class="babero" d="M106 55 C114 53 120 58 118 66 C112 68 106 64 106 58 Z" />
+                  <path class="pico-abajo" d="M118 57 C140 58 166 56 178 54 C166 64 139 67 118 62 Z" />
+                  <g clip-path="url(#pico-tucan)">
+                    <rect class="pico-verde" x="110" y="30" width="26" height="32" />
+                    <rect class="pico-naranja" x="136" y="30" width="24" height="32" />
+                    <rect class="pico-rojo" x="160" y="30" width="24" height="32" />
+                  </g>
+                  <path class="pico-linea" d="M116 44 C136 37 163 39 180 52" />
+                  <circle class="anillo" cx="110" cy="48" r="5.2" />
+                  <g class="ojo-ave"><circle cx="110" cy="48" r="2.6" /><circle class="brillo" cx="110.9" cy="47.1" r="0.9" /><ellipse class="parpado-ave" cx="110" cy="48" rx="3.3" ry="3.3" /></g>
                 </g>
               </g>
             </g>

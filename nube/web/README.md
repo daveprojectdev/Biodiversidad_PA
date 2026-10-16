@@ -22,15 +22,15 @@ el de la versión entregada y no se toca.
   licencia, vía `GET /multimedia`. Solo se muestran archivos con licencia
   Creative Commons; los de «todos los derechos reservados» y las demás fuentes
   (observation.org) quedan como enlace.
-- Color por colección: verde para anfibios y ámbar para aves (el amarillo del
-  tirano tropical, elegido por David). El tono del texto y los botones (`--c`)
+- Color por colección: verde para anfibios y ámbar para aves (elegido por
+  David; va con el pico del tucán). El tono del texto y los botones (`--c`)
   cumple 5:1 sobre blanco; el mapa usa la escala `--c1` a `--c4`.
 - «Hablar» usa el dictado del navegador (Web Speech API) mientras no exista la
   voz propia (fase 4). Donde el navegador no lo tiene, el botón no aparece.
 - Mascotas, pedidas por David: con Anfibios, la rana de ojos rojos (*Agalychnis
   callidryas*) en su nenúfar (se probó la rana dorada y David prefirió esta);
-  con Aves, un tirano tropical (*Tyrannus melancholicus*, el ave más avistada),
-  erguido y esbelto, en una rama. Flotan en el Pacífico del mapa. La rana da un
+  con Aves, un tucán pico iris (*Ramphastos sulfuratus*, el tucán más avistado:
+  580 avistamientos en 11 provincias) en una rama; antes fue un tirano tropical. Flotan en el Pacífico del mapa. La rana da un
   saltito cada 8 s y croa; el ave salta de la rama, aletea y vuela un poco cada
   9 s. Con un clic, la rana da un salto grande y el ave un vuelo corto. Son SVG
   en `index.html`, animadas solo con transform y opacity, y se quedan quietas
