@@ -21,6 +21,8 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preload" href="/fuentes/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fuentes/fragment-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="modulepreload" href="/panorama-textos.js">
 <link rel="preload" href="/mapa-panama.svg" as="fetch" crossorigin>
 <link rel="preload" href="/panorama-amphibia.json" as="fetch" crossorigin>
 <link rel="stylesheet" href="/estilos.css">
@@ -130,7 +132,7 @@
     <section class="lado-pregunta">
       <p class="antetitulo">Consultas en lenguaje natural sobre la biodiversidad de Panamá</p>
       <h1>Pregunta, y mira dónde <span>vive</span> la respuesta.</h1>
-      <p class="lead" id="lead">Pregunta en español, escribiendo o hablando, como le preguntarías a una persona. Un modelo de lenguaje convierte tu pregunta en SQL y la respuesta sale de una base de datos real de avistamientos de anfibios.</p>
+      <p class="lead" id="lead">Pregunta en español, escribiendo o hablando, como le preguntarías a una persona. Un modelo de lenguaje convierte tu pregunta en SQL y la respuesta sale de una base de datos real: 8.430 avistamientos de anfibios hechos por 2.060 personas en todo el país.</p>
 
       <form class="caja" id="formulario">
         <label class="oculto" for="pregunta">Tu pregunta</label>
@@ -146,7 +148,7 @@
 
       <p class="nota-voz">Si preguntas hablando, tu voz se envía a Groq solo para pasarla a texto; no la guardamos. <a href="/privacidad">Privacidad y uso</a></p>
 
-      <div class="sugeridas" id="sugeridas" aria-label="Preguntas de ejemplo"></div>
+      <div class="sugeridas" id="sugeridas" aria-label="Preguntas de ejemplo"><button type="button">¿Qué provincia tiene más especies?</button><button type="button">¿Dónde se ha visto la rana de ojos rojos?</button><button type="button">¿Cuál es la especie más avistada?</button><button type="button">¿Se ven más en temporada seca o lluviosa?</button><button type="button">¿Qué familia tuvo más especies distintas en Chiriquí en 2025?</button></div>
 
       <div class="anteriores" id="anteriores" hidden>
         <h2>Tus preguntas</h2>
@@ -156,8 +158,8 @@
 
     <section class="mapa-tarjeta" aria-live="polite">
       <div class="titulo-mapa">
-        <h2 id="titulo-mapa">Especies por provincia</h2>
-        <small id="nota-mapa">cargando…</small>
+        <h2 id="titulo-mapa">Especies de anfibios por provincia</h2>
+        <small id="nota-mapa">8.430 avistamientos · 2020–2026</small>
       </div>
       <div class="mapa-envoltura">
         <div class="mapa" id="mapa"></div>
@@ -239,7 +241,7 @@
     </section>
   </main>
 
-  <section class="resumen" id="resumen" aria-label="La colección en cifras"></section>
+  <section class="resumen" id="resumen" aria-label="La colección en cifras"><div class="dato"><b>135</b><span>especies</span></div><div class="dato"><b>8.430</b><span>avistamientos</span></div><div class="dato"><b>2.060</b><span>observadores</span></div><div class="dato"><b>72</b><span>especies en Panamá, la provincia más diversa</span></div></section>
 
   <footer class="pie">
     <span>Datos: <a href="https://www.gbif.org" rel="noopener">GBIF.org</a>, CC BY-NC 4.0 · DOI anfibios <a href="https://doi.org/10.15468/dl.zcy9ys" rel="noopener">10.15468/dl.zcy9ys</a> · DOI aves <a href="https://doi.org/10.15468/dl.qpx3vw" rel="noopener">10.15468/dl.qpx3vw</a></span>

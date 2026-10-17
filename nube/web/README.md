@@ -9,7 +9,12 @@ el de la versión entregada y no se toca.
 
 - La sirve el mismo Worker (`nube/worker`, `assets` en `wrangler.jsonc`): misma
   dirección que la API, sin CORS y un solo despliegue.
-- Al entrar, `GET /explorar` pinta las especies por provincia de la colección.
+- Al entrar, el panorama de la colección (`panorama-amphibia.json` y
+  `panorama-aves.json`, con `GET /explorar` de respaldo) pinta las especies por
+  provincia sin despertar a Neon. `npm run panorama` en `nube/worker` los
+  regenera y escribe en `index.html` el estado inicial (lead, título y nota del
+  mapa, sugeridas y resumen) con los textos de `panorama-textos.js`, para que
+  nada se mueva al cargar. Se corre otra vez solo si se migra una colección.
   No usa el modelo, así que no gasta cuota.
 - Al preguntar, `POST /consultar`. Si la respuesta trae una columna de
   provincias, el mapa se pinta con ella: con la cantidad si la hay, o contando
@@ -55,7 +60,7 @@ el de la versión entregada y no se toca.
   sistema) lo fija y se recuerda en el navegador. `tema.js` lo aplica antes de
   pintar, sin destello. En el mapa oscuro, más = más brillante; el tucán lleva
   un contorno claro para no perderse en el mar. Todo el texto pasa de 7:1.
-- Sin dependencias ni paso de compilación: `index.html`, `estilos.css`, `app.js`, `tema.js`.
+- Sin dependencias ni paso de compilación: `index.html`, `estilos.css`, `app.js`, `panorama-textos.js`, `tema.js`.
 
 ## Páginas de texto, buscadores y estadísticas (2026-10-16)
 

@@ -5,30 +5,7 @@
 // (ver nube/worker/README.md).
 // ============================================================
 
-const COLECCIONES = {
-  anfibios: {
-    api: "amphibia",
-    nombre: "anfibios",
-    sugeridas: [
-      "¿Qué provincia tiene más especies?",
-      "¿Dónde se ha visto la rana de ojos rojos?",
-      "¿Cuál es la especie más avistada?",
-      "¿Se ven más en temporada seca o lluviosa?",
-      "¿Qué familia tuvo más especies distintas en Chiriquí en 2025?",
-    ],
-  },
-  aves: {
-    api: "aves",
-    nombre: "aves",
-    sugeridas: [
-      "¿Qué provincia tiene más especies?",
-      "¿En qué provincias se han visto colibríes?",
-      "¿Cuál es el ave más avistada?",
-      "¿Cuántos avistamientos de garzas hay por provincia?",
-      "¿Qué familia tuvo más especies distintas en Chiriquí en 2025?",
-    ],
-  },
-};
+import { COLECCIONES, num, escapar, tituloMapa, notaMapa, lead, resumenHtml } from "./panorama-textos.js";
 
 const OCULTAS = new Set(["occurrence_url", "media_type"]);
 // Números que no son cantidades: no se suman, no se pintan y se muestran tal cual.
@@ -43,13 +20,6 @@ const estado = {
 };
 
 // ── Utilidades ──
-
-const formato = new Intl.NumberFormat("es-ES", { useGrouping: "always" });
-const num = (n) => (typeof n === "number" ? formato.format(n) : String(n));
-
-function escapar(texto) {
-  return String(texto).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-}
 
 // Compara nombres sin mayúsculas ni acentos, como la base.
 const clave = (t) => String(t).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
@@ -148,22 +118,11 @@ function cargarPanorama(coleccion) {
 
 function mostrarPanorama(datos) {
   const nombre = COLECCIONES[estado.coleccion].nombre;
-  $("titulo-mapa").textContent = `Especies de ${nombre} por provincia`;
-  $("nota-mapa").textContent = `${num(datos.total_avistamientos)} avistamientos · ${datos.rango_anios}`;
+  $("titulo-mapa").textContent = tituloMapa(nombre);
+  $("nota-mapa").textContent = notaMapa(datos);
   pintarMapa(new Map(datos.provincias_detalle.map((p) => [p.provincia, p.especies])), "especies");
-  $("lead").textContent =
-    "Pregunta en español, escribiendo o hablando, como le preguntarías a una persona. " +
-    "Un modelo de lenguaje convierte tu pregunta en SQL y la respuesta sale de una base de datos real: " +
-    `${num(datos.total_avistamientos)} avistamientos de ${nombre} hechos por ${num(datos.total_observadores)} personas en todo el país.`;
-  const masDiversa = datos.provincias_detalle[0];
-  $("resumen").innerHTML = [
-    [num(datos.total_especies), "especies"],
-    [num(datos.total_avistamientos), "avistamientos"],
-    [num(datos.total_observadores), "observadores"],
-    [num(masDiversa.especies), `especies en ${masDiversa.provincia}, la provincia más diversa`],
-  ]
-    .map(([n, t]) => `<div class="dato"><b>${escapar(n)}</b><span>${escapar(t)}</span></div>`)
-    .join("");
+  $("lead").textContent = lead(datos, nombre);
+  $("resumen").innerHTML = resumenHtml(datos);
 }
 
 // ── Respuesta ──

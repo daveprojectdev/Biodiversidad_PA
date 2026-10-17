@@ -4,6 +4,11 @@
 @font-face { font-family: 'Hanken Grotesk'; font-style: normal; font-weight: 100 900; font-display: swap; src: url(/fuentes/hanken-grotesk-latin-wght-normal.woff2) format('woff2'); }
 @font-face { font-family: 'Hanken Grotesk'; font-style: italic; font-weight: 100 900; font-display: swap; src: url(/fuentes/hanken-grotesk-latin-wght-italic.woff2) format('woff2'); }
 @font-face { font-family: 'Fragment Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url(/fuentes/fragment-mono-latin-400-normal.woff2) format('woff2'); }
+/* Respaldos con las medidas de las fuentes reales (ancho medio, ascenso y
+   descenso, sacados de los woff2 con @capsizecss/unpack): mientras llega la
+   fuente, el texto ocupa casi lo mismo y no cambia de renglones (CLS). */
+@font-face { font-family: 'Hanken Respaldo'; src: local('Arial'), local('ArialMT'); size-adjust: 100.94%; ascent-override: 99.07%; descent-override: 30.02%; line-gap-override: 0%; }
+@font-face { font-family: 'Fragment Respaldo'; src: local('Consolas'); size-adjust: 112.41%; ascent-override: 84.51%; descent-override: 22.24%; line-gap-override: 0%; }
 
 :root {
   --fondo: #f7f6f1;
@@ -13,8 +18,8 @@
   --linea: #e2e0d8;
   --mar: #dfe9ee;
   --vacio: #f1f4f5;
-  --sans: 'Hanken Grotesk', system-ui, sans-serif;
-  --mono: 'Fragment Mono', ui-monospace, monospace;
+  --sans: 'Hanken Grotesk', 'Hanken Respaldo', system-ui, sans-serif;
+  --mono: 'Fragment Mono', 'Fragment Respaldo', ui-monospace, monospace;
   /* Color de la colección: verde para anfibios, ámbar para aves. */
   --c: #0b7a4d; /* texto y botones: 5:1 sobre blanco; el mapa usa --c1..--c4 */
   --c1: #d4ecdf;
@@ -33,6 +38,9 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+/* La barra de desplazamiento tiene su hueco desde el principio: si aparece
+   cuando la página crece, la columna centrada no se corre de lado (CLS). */
+html { scrollbar-gutter: stable; }
 body { background: var(--fondo); color: var(--tinta); font-family: var(--sans); font-size: 17px; line-height: 1.5; }
 a { color: inherit; }
 button, textarea { font: inherit; color: inherit; }
