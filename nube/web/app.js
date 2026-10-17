@@ -125,13 +125,24 @@ function pintarMapa(valores, unidad) {
 
 // ── Panorama de la colección (sin modelo, sin gastar cuota) ──
 
-async function cargarPanorama(coleccion) {
-  if (!estado.panorama[coleccion]) {
-    const r = await fetch(`/explorar?coleccion=${COLECCIONES[coleccion].api}`);
-    const datos = await r.json();
-    if (!r.ok || datos.error) throw new Error(datos.error || `HTTP ${r.status}`);
-    estado.panorama[coleccion] = datos;
+// Primero el JSON estático (npm run panorama), que no despierta a Neon; si
+// falta, /explorar. Se guarda la promesa para no pedirlo dos veces.
+async function pedirPanorama(api) {
+  for (const url of [`/panorama-${api}.json`, `/explorar?coleccion=${api}`]) {
+    try {
+      const r = await fetch(url);
+      const datos = await r.json();
+      if (r.ok && !datos.error) return datos;
+    } catch {}
   }
+  throw new Error("sin panorama");
+}
+
+function cargarPanorama(coleccion) {
+  estado.panorama[coleccion] ??= pedirPanorama(COLECCIONES[coleccion].api).catch((e) => {
+    delete estado.panorama[coleccion];
+    throw e;
+  });
   return estado.panorama[coleccion];
 }
 
@@ -403,6 +414,13 @@ async function preguntar(pregunta, extra = {}) {
   boton.disabled = true;
   $("respuesta").hidden = false;
   $("respuesta").innerHTML = '<p class="cargando">Escribiendo el SQL y consultando la base…</p>';
+  // Primero se pinta el «cargando» (el clic responde ya, INP) y después se
+  // desplaza la página, que es lo que cuesta. Con la pestaña en segundo plano
+  // no hay cuadros: el tope de 100 ms evita que la pregunta se quede parada.
+  await new Promise((r) => {
+    requestAnimationFrame(() => setTimeout(r, 0));
+    setTimeout(r, 100);
+  });
   $("respuesta").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest" });
 
   let datos;
@@ -793,5 +811,6 @@ for (const id of ["rana", "ave"]) {
 }
 
 prepararVoz();
+cargarPanorama("anfibios").catch(() => {}); // en paralelo con el mapa
 await cargarMapa();
 await cambiarColeccion("anfibios");

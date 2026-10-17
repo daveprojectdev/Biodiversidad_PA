@@ -6,6 +6,7 @@
     "vars": "node scripts/preparar-dev-vars.mjs",
     "dev": "node scripts/dev.mjs",
     "tipos": "tsc --noEmit",
+    "panorama": "node scripts/generar-panorama.mjs",
     "probar-drm": "node --experimental-strip-types scripts/probar-drm.mjs"
   },
   "dependencies": {
