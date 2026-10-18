@@ -119,6 +119,7 @@ function cargarPanorama(coleccion) {
 function mostrarPanorama(datos) {
   const nombre = COLECCIONES[estado.coleccion].nombre;
   $("titulo-mapa").textContent = tituloMapa(nombre);
+  $("mapa").classList.remove("atenuado");
   $("nota-mapa").textContent = notaMapa(datos);
   pintarMapa(new Map(datos.provincias_detalle.map((p) => [p.provincia, p.especies])), "especies");
   $("lead").textContent = lead(datos, nombre);
@@ -306,6 +307,7 @@ function mostrarRespuesta(entrada) {
   }
   const filas = datos.filas ?? [];
   $("titulo-mapa").innerHTML = escapar(pregunta);
+  $("mapa").classList.remove("atenuado");
   if (!filas.length) {
     $("nota-mapa").textContent = "sin resultados";
     caja.innerHTML = `<p class="frase">La consulta no encontró nada.</p>${botonEscuchar()}${comoFunciona(datos, transcripcion)}`;
@@ -354,10 +356,19 @@ function mostrarRespuesta(entrada) {
       pintarMapa(new Map(filas.map((f) => [f[colProv], null])), "");
     }
   } else {
-    // La respuesta no habla de provincias: el mapa vuelve al panorama.
-    $("nota-mapa").textContent = "el mapa muestra las especies por provincia";
-    const p = estado.panorama[entrada.coleccion];
-    if (p) pintarMapa(new Map(p.provincias_detalle.map((x) => [x.provincia, x.especies])), "especies");
+    // La respuesta no habla de provincias: el mapa vuelve al panorama, con su
+    // título y más pálido, para que no se lea como la respuesta (la pregunta
+    // sigue en la tarjeta de abajo).
+    $("titulo-mapa").textContent = tituloMapa(COLECCIONES[entrada.coleccion].nombre);
+    $("nota-mapa").textContent = "Esta respuesta no se puede ubicar en el mapa; aquí, las especies por provincia.";
+    $("mapa").classList.add("atenuado");
+    // estado.panorama guarda promesas: hay que esperarla (antes se leía como
+    // si fueran los datos y el mapa se quedaba con la respuesta anterior).
+    cargarPanorama(entrada.coleccion)
+      .then((p) => {
+        if (estado.actual === entrada) pintarMapa(new Map(p.provincias_detalle.map((x) => [x.provincia, x.especies])), "especies");
+      })
+      .catch(() => {});
   }
 }
 

@@ -94,7 +94,8 @@ h1 span { color: var(--c); }
 /* El SVG llega por fetch: el hueco se reserva con su viewBox (1000×415)
    para que el mapa no empuje la página al aparecer (CLS). */
 .mapa { margin-top: 14px; aspect-ratio: 1000 / 415; }
-.mapa svg { width: 100%; height: auto; display: block; overflow: visible; }
+.mapa svg { width: 100%; height: auto; display: block; overflow: visible; transition: opacity .35s ease; }
+.mapa.atenuado svg { opacity: .45; }
 .mapa path { fill: var(--vacio); stroke: #fff; stroke-width: 1.4; stroke-linejoin: round; transition: fill .35s ease; }
 .mapa path[data-nivel="1"] { fill: var(--c1); }
 .mapa path[data-nivel="2"] { fill: var(--c2); }
