@@ -403,6 +403,10 @@ async function preguntar(pregunta, extra = {}) {
   estado.actual = entrada;
   mostrarRespuesta(entrada);
   pintarHistorial();
+  // Con respuesta, la caja queda libre para la siguiente (la pregunta sigue
+  // arriba de la respuesta). Con error se queda, para corregirla. Si mientras
+  // tanto se escribió otra, no se toca.
+  if (!datos.error && $("pregunta").value.trim() === pregunta) $("pregunta").value = "";
   // Toda respuesta se oye sola (pedido de David, como la app entregada con
   // las preguntas habladas). Si el navegador lo bloquea, queda «Escuchar».
   if (!datos.error) escuchar(entrada);
